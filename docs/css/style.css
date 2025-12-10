@@ -39,6 +39,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -47,12 +48,14 @@ body {
   background: var(--color-bg);
   line-height: 1.6;
   font-size: 16px;
+  overflow-x: hidden;
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4 {
@@ -204,14 +207,15 @@ li {
   align-items: center;
   justify-content: center;
   gap: 60px;
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
   flex-wrap: wrap;
+  overflow-x: hidden;
 }
 
 .hero-content {
   flex: 1;
-  min-width: 300px;
+  min-width: 0;
   max-width: 500px;
 }
 
@@ -289,6 +293,7 @@ li {
   border-radius: var(--radius-md);
   padding: 4px;
   max-width: 100%;
+  overflow: hidden;
 }
 
 .hero-install code {
@@ -297,6 +302,8 @@ li {
   padding: 12px 16px;
   flex: 1;
   font-size: 0.9rem;
+  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 .copy-btn {
@@ -321,8 +328,9 @@ li {
 
 .hero-image {
   flex: 1;
-  min-width: 300px;
+  min-width: 0;
   max-width: 600px;
+  width: 100%;
 }
 
 .hero-image img {
@@ -341,7 +349,7 @@ li {
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
   gap: 24px;
   max-width: 1000px;
   margin: 0 auto;
@@ -380,6 +388,8 @@ li {
    ============================================ */
 .section {
   padding: 80px 24px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .section-alt {
@@ -409,7 +419,7 @@ li {
 
 .install-methods {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: 1fr;
   gap: 24px;
   max-width: 800px;
   margin: 0 auto 40px;
@@ -420,6 +430,8 @@ li {
   padding: 24px;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .install-method h3 {
@@ -460,9 +472,16 @@ li {
 }
 
 .verify-install {
-  max-width: 500px;
+  background: white;
+  padding: 24px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  max-width: 800px;
   margin: 0 auto;
-  text-align: center;
+}
+
+.verify-install h3 {
+  margin-bottom: 16px;
 }
 
 /* ============================================
@@ -512,7 +531,7 @@ li {
    ============================================ */
 .commands-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
   gap: 24px;
   margin-bottom: 48px;
 }
@@ -522,6 +541,8 @@ li {
   padding: 24px;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .command-card h3 code {
@@ -821,7 +842,7 @@ kbd {
    ============================================ */
 .troubleshoot-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 24px;
   max-width: 1000px;
   margin: 0 auto;
@@ -832,6 +853,8 @@ kbd {
   padding: 24px;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .troubleshoot-card h3 {
@@ -1012,23 +1035,130 @@ kbd {
   .footer-copyright {
     text-align: center;
   }
-}
 
-@media (max-width: 480px) {
-  .hero h1 {
-    font-size: 1.875rem;
+  .code-block {
+    max-width: 100%;
+  }
+
+  .code-block pre {
+    font-size: 0.8rem;
+  }
+
+  .code-block code {
+    word-break: break-all;
+  }
+
+  /* Features & Installation padding */
+  .features {
+    padding: 60px 16px;
   }
 
   .section {
     padding: 60px 16px;
   }
 
+  /* Install method boxes */
+  .install-methods {
+    padding: 0;
+  }
+
+  .install-method {
+    padding: 16px;
+  }
+
+  .verify-install {
+    padding: 16px;
+  }
+
+  /* Command cards */
+  .command-card {
+    padding: 16px;
+    overflow: hidden;
+  }
+
+  .command-card .code-block pre {
+    padding: 12px;
+  }
+
+  .command-options ul {
+    padding-left: 1rem;
+  }
+
+  /* Workflow section */
+  .workflow-image {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .workflow-description {
+    min-width: 0;
+  }
+
+  .workflow-steps {
+    padding: 0;
+  }
+
+  .workflow-step {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 100px 12px 40px;
+  }
+
+  .hero h1 {
+    font-size: 1.5rem;
+  }
+
+  .hero-badge {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+  }
+
+  .section {
+    padding: 40px 12px;
+  }
+
+  .features {
+    padding: 40px 12px;
+  }
+
+  .container {
+    padding: 0 12px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
   .features-grid {
     grid-template-columns: 1fr;
   }
 
+  .feature-card {
+    padding: 16px;
+  }
+
   .install-methods {
     grid-template-columns: 1fr;
+  }
+
+  .install-method {
+    padding: 12px;
+  }
+
+  .verify-install {
+    padding: 12px;
+  }
+
+  .command-card {
+    padding: 12px;
+  }
+
+  .workflow-step {
+    padding: 12px;
   }
 
   .state-flow {
@@ -1037,5 +1167,13 @@ kbd {
 
   .arrow {
     transform: rotate(90deg);
+  }
+
+  .troubleshoot-card {
+    padding: 16px;
+  }
+
+  .footer {
+    padding: 32px 12px;
   }
 }
