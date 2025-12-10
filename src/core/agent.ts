@@ -112,7 +112,7 @@ function buildTeamLeadPrompt(task: Task, config: OrchestratorConfig): string {
 
 ## Output
 You MUST write your instructions to:
-${path.join(projectPath, '.claude-orchestrator', 'tasks', 'messages', 'to-developer.json')}
+${path.join(projectPath, '.claude-orchestrator', 'messages', 'to-developer.json')}
 
 The file format should be:
 {
@@ -175,7 +175,7 @@ ${instructions.apiEndpoints ? `## API Endpoints\n${instructions.apiEndpoints.map
 
 ## Output
 After implementation, you MUST write your completion report to:
-${path.join(projectPath, '.claude-orchestrator', 'tasks', 'messages', 'to-team-lead.json')}
+${path.join(projectPath, '.claude-orchestrator', 'messages', 'to-team-lead.json')}
 
 The file format should be:
 {
@@ -415,20 +415,29 @@ export async function runReview(
 // ============================================================================
 
 /**
+ * Process task result with error details
+ */
+export interface ProcessTaskResult {
+  success: boolean;
+  error?: string;
+  phase?: 'team_lead' | 'developer' | 'review';
+}
+
+/**
  * Process a single task through the full pipeline
  *
  * @param projectPath - Path to the project
  * @param task - Task to process
  * @param config - Project configuration
  * @param skipPermissions - Whether to skip permission prompts
- * @returns Whether task was completed successfully
+ * @returns Task result with error details
  */
 export async function processTask(
   projectPath: string,
   task: Task,
   config: OrchestratorConfig,
   skipPermissions = false
-): Promise<boolean> {
+): Promise<ProcessTaskResult> {
   logger.info(`Processing task: ${task.id} - ${task.title}`);
 
   try {
@@ -439,15 +448,17 @@ export async function processTask(
     // Phase 1: Team Lead assignment
     const teamLeadResult = await runTeamLead(projectPath, task, config, skipPermissions);
     if (!teamLeadResult.success) {
-      logger.error(`Team Lead failed for ${task.id}`);
-      return false;
+      const error = teamLeadResult.error || 'Team Lead failed to analyze task';
+      logger.error(`Team Lead failed for ${task.id}: ${error}`);
+      return { success: false, error, phase: 'team_lead' };
     }
 
     // Phase 2: Developer implementation
     const developerResult = await runDeveloper(projectPath, task, config, skipPermissions);
     if (!developerResult.success) {
-      logger.error(`Developer failed for ${task.id}`);
-      return false;
+      const error = developerResult.error || 'Developer failed to implement task';
+      logger.error(`Developer failed for ${task.id}: ${error}`);
+      return { success: false, error, phase: 'developer' };
     }
 
     // Phase 3: Update status to awaiting review
@@ -480,7 +491,7 @@ export async function processTask(
         );
       }
 
-      return true;
+      return { success: true };
     } else {
       await rejectTask(projectPath, task.id, reviewResult.reason || 'Review failed');
       logger.warn(`Task ${task.id} rejected: ${reviewResult.reason}`);
@@ -498,11 +509,11 @@ export async function processTask(
         reviewResult.reason
       );
 
-      return false;
+      return { success: false, error: reviewResult.reason || 'Review failed', phase: 'review' };
     }
   } catch (error) {
     logger.error(`Error processing task ${task.id}: ${error}`);
-    return false;
+    return { success: false, error: String(error) };
   } finally {
     // Clear current task
     await setCurrentTask(projectPath, null);

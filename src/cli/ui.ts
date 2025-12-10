@@ -175,14 +175,15 @@ export function showValidationResults(
  * Display current orchestration status
  *
  * @param status - Status file contents
+ * @param actuallyRunning - Whether the process is actually running (checked via PID)
  */
-export function showStatus(status: StatusFile): void {
+export function showStatus(status: StatusFile, actuallyRunning?: boolean): void {
   showSection('Orchestrator Status');
 
-  // Orchestrator status
-  const orchRunning = status.orchestrator.running;
+  // Orchestrator status - use actuallyRunning if provided, otherwise fallback to status file
+  const orchRunning = actuallyRunning ?? status.orchestrator.running;
   const orchSymbol = orchRunning ? symbols.success : symbols.warning;
-  const orchText = orchRunning ? 'Running' : 'Stopped';
+  const orchText = orchRunning ? colors.success('Running') : colors.warning('Stopped');
   console.log(`  ${orchSymbol} Orchestrator: ${colors.bold(orchText)}`);
 
   if (status.orchestrator.pid) {

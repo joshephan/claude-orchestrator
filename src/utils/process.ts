@@ -134,8 +134,11 @@ export async function runClaudeAgent(
     let stderr = '';
     let timedOut = false;
 
+    // Build full command string to avoid deprecation warning
+    const command = ['claude', ...args].join(' ');
+
     // Spawn the Claude process
-    const proc = spawn('claude', args, {
+    const proc = spawn(command, [], {
       cwd: options.cwd,
       env: { ...process.env, ...options.env },
       shell: true,

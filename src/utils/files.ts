@@ -20,6 +20,7 @@ export const FILES = {
   config: 'config.json',
   status: 'status.json',
   queue: 'queue.json',
+  pid: 'orchestrator.pid',
   toDeveloper: 'messages/to-developer.json',
   toTeamLead: 'messages/to-team-lead.json',
   log: 'logs/log.md',

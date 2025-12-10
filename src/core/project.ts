@@ -342,7 +342,7 @@ export function getProjectOrchestratorDir(projectPath: string): string {
  */
 export function getProjectFilePath(
   projectPath: string,
-  file: 'config' | 'status' | 'queue' | 'toDeveloper' | 'toTeamLead' | 'log'
+  file: 'config' | 'status' | 'queue' | 'pid' | 'toDeveloper' | 'toTeamLead' | 'log'
 ): string {
   const absolutePath = resolvePath(projectPath);
   return getFilePath(absolutePath, file);

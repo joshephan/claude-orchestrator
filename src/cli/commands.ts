@@ -205,14 +205,17 @@ export async function startCommand(options: StartOptions): Promise<void> {
 
       if (tasksToProcess.length === 0) {
         // Run discovery to create tasks
-        ui.showProgress('No tasks found. Running discovery agent...');
+        ui.startSpinner('Running discovery agent... (analyzing project and creating tasks)');
         const discoveryResult = await runDiscovery(projectPath, config, skipPermissions);
 
         if (!discoveryResult.success) {
-          ui.showError('Discovery failed', discoveryResult.error);
+          ui.spinnerFail('Discovery failed');
+          ui.showError('Discovery error', discoveryResult.error);
           if (!config.continuous) {
             break;
           }
+        } else {
+          ui.spinnerSuccess('Discovery completed');
         }
 
         // Re-check for tasks after discovery
@@ -239,16 +242,19 @@ export async function startCommand(options: StartOptions): Promise<void> {
       let failed = 0;
 
       for (const task of tasksToProcess) {
-        ui.showProgress(`Processing task: ${task.id} - ${task.title}`);
+        ui.startSpinner(`Processing: ${task.id} - ${task.title}`);
 
-        const success = await processTask(projectPath, task, config, skipPermissions);
+        const result = await processTask(projectPath, task, config, skipPermissions);
 
-        if (success) {
+        if (result.success) {
           completed++;
-          ui.showSuccess(`Task ${task.id} completed`);
+          ui.spinnerSuccess(`Task ${task.id} completed`);
         } else {
           failed++;
-          ui.showWarning(`Task ${task.id} failed`);
+          ui.spinnerFail(`Task ${task.id} failed`);
+          if (result.error) {
+            ui.showError(`  Phase: ${result.phase || 'unknown'}`, result.error);
+          }
         }
       }
 
@@ -304,7 +310,20 @@ export async function statusCommand(): Promise<void> {
     const status = await loadStatus(projectPath);
     const stats = await getQueueStats(projectPath);
 
-    ui.showStatus(status);
+    // Check if orchestrator process is actually running
+    const pidFile = getProjectFilePath(projectPath, 'pid');
+    const pid = await readPidFile(pidFile);
+    const actuallyRunning = pid !== null && isProcessRunning(pid);
+
+    // Update status if mismatch
+    if (status.orchestrator.running !== actuallyRunning) {
+      status.orchestrator.running = actuallyRunning;
+      if (!actuallyRunning) {
+        status.orchestrator.pid = null;
+      }
+    }
+
+    ui.showStatus(status, actuallyRunning);
     ui.showQueueStats(stats);
 
     // Show recent tasks
