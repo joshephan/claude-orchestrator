@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Orchestrator - Multi-Agent Development Automation</title>
+  <meta name="description" content="CLI tool for orchestrating multi-agent development workflows using Claude Code">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/claude-orchestrator.png" type="image/png">
+</head>
+
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="#" class="nav-logo">
+        <img src="assets/claude-orchestrator.png" alt="Logo" class="logo-img">
+        <span>Claude Orchestrator</span>
+      </a>
+      <ul class="nav-menu">
+        <li><a href="#installation">Installation</a></li>
+        <li><a href="#quick-start">Quick Start</a></li>
+        <li><a href="#commands">Commands</a></li>
+        <li><a href="#workflow">Workflow</a></li>
+        <li><a href="#configuration">Config</a></li>
+        <li><a href="https://github.com/joshephan/claude-orchestrator" target="_blank" class="nav-github">GitHub</a>
+        </li>
+      </ul>
+      <button class="nav-toggle" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">NOT OFFICIAL CLAUDE CODE TOOL</div>
+      <h1>Claude Orchestrator</h1>
+      <p class="hero-subtitle">Automate your development workflow with multi-agent AI collaboration</p>
+      <div class="hero-actions">
+        <a href="#installation" class="btn btn-primary">Get Started</a>
+        <a href="#workflow" class="btn btn-secondary">Learn More</a>
+      </div>
+      <div class="hero-install">
+        <code>npm install -g @graygate/claude-orchestrator</code>
+        <button class="copy-btn" onclick="copyToClipboard('npm install -g @graygate/claude-orchestrator')">Copy</button>
+      </div>
+    </div>
+    <div class="hero-image">
+      <img src="assets/main-cartoon.png"
+        alt="Effortless Automation Unlocked - Developer freedom with Claude Orchestrator">
+    </div>
+  </header>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="container">
+      <h2>Why Claude Orchestrator?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">&#129302;</div>
+          <h3>Multi-Agent System</h3>
+          <p>Team Lead analyzes tasks, Developer implements them. Automated collaboration between AI agents.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#128202;</div>
+          <h3>Task Queue Management</h3>
+          <p>Automatic task discovery, prioritization, and tracking. Never lose track of what needs to be done.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#128260;</div>
+          <h3>Checkpoint Recovery</h3>
+          <p>Stop and resume workflows anytime. Your progress is always saved.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#128200;</div>
+          <h3>Real-time Monitoring</h3>
+          <p>Watch progress in real-time with detailed logs and status updates.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Installation Section -->
+  <section class="section" id="installation">
+    <div class="container">
+      <h2>Installation</h2>
+
+      <div class="requirements">
+        <h3>Prerequisites</h3>
+        <ul>
+          <li>Node.js >= 18.0.0</li>
+          <li>Claude Code CLI installed and authenticated</li>
+        </ul>
+      </div>
+
+      <div class="install-methods">
+        <div class="install-method">
+          <h3>Global Installation (Recommended)</h3>
+          <div class="code-block">
+            <pre><code>npm install -g @graygate/claude-orchestrator</code></pre>
+            <button class="copy-btn"
+              onclick="copyToClipboard('npm install -g @graygate/claude-orchestrator')">Copy</button>
+          </div>
+        </div>
+
+        <div class="install-method">
+          <h3>Run with npx</h3>
+          <div class="code-block">
+            <pre><code>npx @graygate/claude-orchestrator</code></pre>
+            <button class="copy-btn" onclick="copyToClipboard('npx @graygate/claude-orchestrator')">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="verify-install">
+        <h3>Verify Installation</h3>
+        <div class="code-block">
+          <pre><code>claude-orchestrator --version</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Start Section -->
+  <section class="section section-alt" id="quick-start">
+    <div class="container">
+      <h2>Quick Start</h2>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Initialize Your Project</h3>
+            <p>Navigate to your project directory and initialize the orchestrator.</p>
+            <div class="code-block">
+              <pre><code>cd your-project
+claude-orchestrator init</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Start Development</h3>
+            <p>Define your development scope and goals to begin automated development.</p>
+            <div class="code-block">
+              <pre><code>claude-orchestrator start \
+  --scope "Implement user authentication" \
+  --goals "Login,Register,Password Reset"</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Monitor Progress</h3>
+            <p>Watch the agents work and monitor the progress in real-time.</p>
+            <div class="code-block">
+              <pre><code># View current status
+claude-orchestrator status
+
+# Watch logs in real-time
+claude-orchestrator logs --follow</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Commands Section -->
+  <section class="section" id="commands">
+    <div class="container">
+      <h2>Commands Reference</h2>
+
+      <div class="commands-grid">
+        <div class="command-card">
+          <h3><code>init</code></h3>
+          <p>Initialize the orchestrator in a project directory.</p>
+          <div class="code-block">
+            <pre><code>claude-orchestrator init [directory]</code></pre>
+          </div>
+          <div class="command-options">
+            <h4>Arguments</h4>
+            <ul>
+              <li><code>[directory]</code> - Target project directory (default: current)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="command-card">
+          <h3><code>start</code></h3>
+          <p>Start the orchestration process.</p>
+          <div class="code-block">
+            <pre><code>claude-orchestrator start [options]</code></pre>
+          </div>
+          <div class="command-options">
+            <h4>Options</h4>
+            <ul>
+              <li><code>--scope &lt;scope&gt;</code> - Development scope description</li>
+              <li><code>--goals &lt;goals&gt;</code> - Comma-separated development goals</li>
+              <li><code>--max-tasks &lt;n&gt;</code> - Maximum tasks per cycle (default: 10)</li>
+              <li><code>--platform &lt;platform&gt;</code> - Target platform (android, ios, web, custom)</li>
+              <li><code>--continuous</code> - Enable continuous discovery mode</li>
+              <li><code>--dry-run</code> - Preview without execution</li>
+              <li><code>--skip-permissions</code> - Skip Claude permission prompts</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="command-card">
+          <h3><code>status</code></h3>
+          <p>Show current orchestration status.</p>
+          <div class="code-block">
+            <pre><code>claude-orchestrator status</code></pre>
+          </div>
+          <div class="command-options">
+            <h4>Displays</h4>
+            <ul>
+              <li>Active agents and their status</li>
+              <li>Current task being processed</li>
+              <li>Queue statistics</li>
+              <li>Recent activity</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="command-card">
+          <h3><code>logs</code></h3>
+          <p>View development logs.</p>
+          <div class="code-block">
+            <pre><code>claude-orchestrator logs [options]</code></pre>
+          </div>
+          <div class="command-options">
+            <h4>Options</h4>
+            <ul>
+              <li><code>--tail &lt;n&gt;</code> - Show last n entries</li>
+              <li><code>--follow</code> - Stream new log entries</li>
+              <li><code>--task &lt;id&gt;</code> - Filter by task ID</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="command-card">
+          <h3><code>stop</code></h3>
+          <p>Stop running agents gracefully.</p>
+          <div class="code-block">
+            <pre><code>claude-orchestrator stop</code></pre>
+          </div>
+          <div class="command-options">
+            <h4>Actions</h4>
+            <ul>
+              <li>Sends graceful shutdown signal</li>
+              <li>Saves current state for later resume</li>
+              <li>Marks in-progress tasks appropriately</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="command-card">
+          <h3><code>resume</code></h3>
+          <p>Resume from the last checkpoint.</p>
+          <div class="code-block">
+            <pre><code>claude-orchestrator resume</code></pre>
+          </div>
+          <div class="command-options">
+            <h4>Actions</h4>
+            <ul>
+              <li>Loads saved state from previous run</li>
+              <li>Continues processing in-progress tasks</li>
+              <li>Restarts agent processes</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Mode -->
+      <div class="interactive-mode">
+        <h3>Interactive Mode Shortcuts</h3>
+        <p>During orchestration, use these keyboard shortcuts:</p>
+        <table class="shortcuts-table">
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><kbd>l</kbd></td>
+              <td>Show recent log entries</td>
+            </tr>
+            <tr>
+              <td><kbd>s</kbd></td>
+              <td>Show current status</td>
+            </tr>
+            <tr>
+              <td><kbd>p</kbd></td>
+              <td>Pause after current task</td>
+            </tr>
+            <tr>
+              <td><kbd>q</kbd></td>
+              <td>Stop gracefully</td>
+            </tr>
+            <tr>
+              <td><kbd>r</kbd></td>
+              <td>Resume paused work</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Workflow Section -->
+  <section class="section section-alt" id="workflow">
+    <div class="container">
+      <h2>How It Works</h2>
+
+      <div class="workflow-intro">
+        <img src="assets/bot-talk-each-other.png" alt="Team Lead and Developer agents collaborating"
+          class="workflow-image">
+        <div class="workflow-description">
+          <p>Claude Orchestrator coordinates two AI agents - a <strong>Team Lead</strong> and a
+            <strong>Developer</strong> - to automate your software development workflow.</p>
+          <p>The Team Lead analyzes tasks and creates detailed implementation instructions, while the Developer executes
+            them with precision.</p>
+        </div>
+      </div>
+
+      <div class="workflow-steps">
+        <div class="workflow-step">
+          <div class="workflow-step-header">
+            <span class="workflow-step-number">1</span>
+            <h3>Discovery (Optional)</h3>
+          </div>
+          <ul>
+            <li>Scan project structure</li>
+            <li>Identify missing features</li>
+            <li>Create tasks in queue</li>
+          </ul>
+        </div>
+
+        <div class="workflow-arrow">&#8595;</div>
+
+        <div class="workflow-step">
+          <div class="workflow-step-header">
+            <span class="workflow-step-number">2</span>
+            <h3>Team Lead Analysis</h3>
+          </div>
+          <ul>
+            <li>Analyze task requirements</li>
+            <li>Study reference code</li>
+            <li>Write implementation guide</li>
+          </ul>
+        </div>
+
+        <div class="workflow-arrow">&#8595;</div>
+
+        <div class="workflow-step">
+          <div class="workflow-step-header">
+            <span class="workflow-step-number">3</span>
+            <h3>Developer Implementation</h3>
+          </div>
+          <ul>
+            <li>Read instructions</li>
+            <li>Implement features</li>
+            <li>Run verification</li>
+            <li>Submit completion report</li>
+          </ul>
+        </div>
+
+        <div class="workflow-arrow">&#8595;</div>
+
+        <div class="workflow-step">
+          <div class="workflow-step-header">
+            <span class="workflow-step-number">4</span>
+            <h3>Review</h3>
+          </div>
+          <ul>
+            <li>Verify implementation</li>
+            <li>Check build status</li>
+            <li>Log completion/rejection</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="task-states">
+        <h3>Task States</h3>
+        <div class="state-flow">
+          <span class="state state-pending">pending</span>
+          <span class="arrow">&#8594;</span>
+          <span class="state state-progress">in_progress</span>
+          <span class="arrow">&#8594;</span>
+          <span class="state state-review">awaiting_review</span>
+          <span class="arrow">&#8594;</span>
+          <span class="state state-completed">completed</span>
+        </div>
+        <div class="state-flow state-flow-alt">
+          <span class="state state-progress">in_progress</span>
+          <span class="arrow">&#8594;</span>
+          <span class="state state-rejected">rejected</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Configuration Section -->
+  <section class="section" id="configuration">
+    <div class="container">
+      <h2>Configuration</h2>
+
+      <div class="config-intro">
+        <p>The orchestrator creates a <code>.claude-orchestrator/</code> directory in your project:</p>
+      </div>
+
+      <div class="directory-structure">
+        <pre><code>.claude-orchestrator/
+├── config.json        # Project configuration
+├── status.json        # Current agent status
+├── queue.json         # Task queue
+├── messages/          # Inter-agent communication
+│   ├── to-developer.json
+│   └── to-team-lead.json
+└── logs/
+    └── log.md         # Development log</code></pre>
+      </div>
+
+      <div class="config-example">
+        <h3>config.json Example</h3>
+        <div class="code-block">
+          <pre><code>{
+  "project": {
+    "name": "your-project",
+    "path": "/absolute/path/to/project"
+  },
+  "scope": "Development scope description",
+  "goals": ["goal1", "goal2"],
+  "platform": "web",
+  "maxTasks": 10,
+  "continuous": false
+}</code></pre>
+        </div>
+      </div>
+
+      <div class="config-options">
+        <h3>Configuration Options</h3>
+        <table class="config-table">
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>project.name</code></td>
+              <td>string</td>
+              <td>Project name (auto-detected)</td>
+            </tr>
+            <tr>
+              <td><code>project.path</code></td>
+              <td>string</td>
+              <td>Absolute path to project</td>
+            </tr>
+            <tr>
+              <td><code>scope</code></td>
+              <td>string</td>
+              <td>Development scope description</td>
+            </tr>
+            <tr>
+              <td><code>goals</code></td>
+              <td>string[]</td>
+              <td>List of development goals</td>
+            </tr>
+            <tr>
+              <td><code>platform</code></td>
+              <td>string</td>
+              <td>Target platform: web, android, ios, custom</td>
+            </tr>
+            <tr>
+              <td><code>maxTasks</code></td>
+              <td>number</td>
+              <td>Maximum tasks per cycle (1-50)</td>
+            </tr>
+            <tr>
+              <td><code>continuous</code></td>
+              <td>boolean</td>
+              <td>Enable continuous discovery mode</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Troubleshooting Section -->
+  <section class="section section-alt" id="troubleshooting">
+    <div class="container">
+      <h2>Troubleshooting</h2>
+
+      <div class="troubleshoot-grid">
+        <div class="troubleshoot-card">
+          <h3>Claude Code Not Found</h3>
+          <p>If you see "Claude Code CLI not found":</p>
+          <div class="code-block">
+            <pre><code>npm install -g @anthropic-ai/claude-code</code></pre>
+          </div>
+        </div>
+
+        <div class="troubleshoot-card">
+          <h3>Authentication Required</h3>
+          <p>If Claude Code is not authenticated:</p>
+          <div class="code-block">
+            <pre><code>claude login</code></pre>
+          </div>
+        </div>
+
+        <div class="troubleshoot-card">
+          <h3>Task Stuck</h3>
+          <p>If a task appears stuck:</p>
+          <div class="code-block">
+            <pre><code># Check status
+claude-orchestrator status
+
+# View recent logs
+claude-orchestrator logs --tail 50
+
+# Stop and resume
+claude-orchestrator stop
+claude-orchestrator resume</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <img src="assets/claude-orchestrator.png" alt="Logo" class="logo-img">
+          <span>Claude Orchestrator</span>
+        </div>
+        <div class="footer-links">
+          <a href="https://www.npmjs.com/package/@graygate/claude-orchestrator" target="_blank">npm</a>
+          <a href="https://github.com/graygate/claude-orchestrator" target="_blank">GitHub</a>
+          <a href="https://github.com/graygate/claude-orchestrator/issues" target="_blank">Issues</a>
+        </div>
+        <div class="footer-copyright">
+          <p>MIT License &copy; 2024</p>
+          <p class="disclaimer">This is not an official Anthropic product.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu toggle
+    document.querySelector('.nav-toggle').addEventListener('click', function () {
+      document.querySelector('.nav-menu').classList.toggle('active');
+      this.classList.toggle('active');
+    });
+
+    // Copy to clipboard
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Close mobile menu if open
+          document.querySelector('.nav-menu').classList.remove('active');
+          document.querySelector('.nav-toggle').classList.remove('active');
+        }
+      });
+    });
+
+    // Navbar scroll effect
+    window.addEventListener('scroll', function () {
+      const navbar = document.querySelector('.navbar');
+      if (window.scrollY > 50) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+  </script>
+</body>
+
+</html>

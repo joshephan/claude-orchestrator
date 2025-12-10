@@ -6,6 +6,7 @@
  */
 
 import { spawn, ChildProcess } from 'child_process';
+import fs from 'fs-extra';
 import type { SpawnOptions, AgentResult } from '../types.js';
 
 // ============================================================================
@@ -316,7 +317,6 @@ export function setupShutdownHandlers(cleanup?: () => Promise<void>): void {
  * @param pidFile - Path to the PID file
  */
 export async function writePidFile(pidFile: string): Promise<void> {
-  const fs = await import('fs-extra');
   await fs.writeFile(pidFile, process.pid.toString(), 'utf-8');
 }
 
@@ -327,7 +327,6 @@ export async function writePidFile(pidFile: string): Promise<void> {
  * @returns Process ID or null if not found
  */
 export async function readPidFile(pidFile: string): Promise<number | null> {
-  const fs = await import('fs-extra');
   try {
     const content = await fs.readFile(pidFile, 'utf-8');
     const pid = parseInt(content.trim(), 10);
@@ -343,7 +342,6 @@ export async function readPidFile(pidFile: string): Promise<number | null> {
  * @param pidFile - Path to the PID file
  */
 export async function removePidFile(pidFile: string): Promise<void> {
-  const fs = await import('fs-extra');
   try {
     await fs.remove(pidFile);
   } catch {

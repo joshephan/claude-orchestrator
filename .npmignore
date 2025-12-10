@@ -1,0 +1,17 @@
+# Documentation site
+docs/
+
+# Source assets (not needed in npm package)
+assets/
+
+# Development files
+.git/
+.github/
+tests/
+*.test.ts
+*.spec.ts
+
+# Config files
+.vscode/
+.idea/
+*.log
