@@ -52,13 +52,13 @@ export const TEMPLATE_NAMES = {
 /** Default timeouts in milliseconds */
 export const TIMEOUTS = {
   /** Team lead task assignment */
-  teamLead: 5 * 60 * 1000, // 5 minutes
+  teamLead: 10 * 60 * 1000, // 10 minutes
 
   /** Developer implementation */
-  developer: 15 * 60 * 1000, // 15 minutes
+  developer: 30 * 60 * 1000, // 30 minutes
 
   /** Task review */
-  review: 3 * 60 * 1000, // 3 minutes
+  review: 5 * 60 * 1000, // 5 minutes
 
   /** Feature discovery */
   discovery: 10 * 60 * 1000, // 10 minutes
