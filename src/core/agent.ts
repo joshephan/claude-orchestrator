@@ -537,3 +537,95 @@ export async function updateCycleStats(
   };
   await saveStatus(projectPath, status);
 }
+
+// ============================================================================
+// Discovery Agent
+// ============================================================================
+
+/** Default timeout for discovery (5 minutes) */
+const DISCOVERY_TIMEOUT = 5 * 60 * 1000;
+
+/**
+ * Run the discovery agent to find and create tasks
+ *
+ * @param projectPath - Path to the project
+ * @param config - Project configuration
+ * @param skipPermissions - Whether to skip permission prompts
+ * @returns Agent result
+ */
+export async function runDiscovery(
+  projectPath: string,
+  config: OrchestratorConfig,
+  skipPermissions = false
+): Promise<AgentResult> {
+  const absolutePath = resolvePath(projectPath);
+  const queueFilePath = path.join(absolutePath, '.claude-orchestrator', 'queue.json');
+
+  logger.info('Discovery agent starting...');
+  await updateAgentStatus(projectPath, 'teamLead', 'analyzing');
+
+  const prompt = `You are a Discovery Agent. Your task is to analyze the project and create implementation tasks.
+
+## Project Information
+- **Project Name**: ${config.project.name}
+- **Project Path**: ${config.project.path}
+- **Platform**: ${config.platform}
+
+## Development Scope
+${config.scope}
+
+## Development Goals
+${config.goals.map((g) => `- ${g}`).join('\n')}
+
+## Your Task
+
+1. Analyze the project structure to understand the codebase
+2. Based on the scope and goals, identify what needs to be implemented
+3. Create specific, actionable tasks
+
+## IMPORTANT: You MUST add tasks to the queue file
+
+Read the current queue file at: ${queueFilePath}
+
+Then add new tasks to the "tasks" array. Each task should have:
+- "id": unique string like "task-001", "task-002", etc.
+- "type": "feature_implementation"
+- "priority": "high", "medium", or "low"
+- "title": clear, descriptive title
+- "description": detailed description of what to implement
+- "acceptanceCriteria": array of criteria
+- "status": "pending"
+- "createdAt": ISO timestamp
+
+Create 1-5 tasks based on the goals. Be specific and actionable.
+
+Example task:
+{
+  "id": "task-001",
+  "type": "feature_implementation",
+  "priority": "high",
+  "title": "Implement character chat UI",
+  "description": "Create the chat interface for character conversations...",
+  "acceptanceCriteria": ["Chat messages display correctly", "User can send messages"],
+  "status": "pending",
+  "createdAt": "${new Date().toISOString()}"
+}
+
+Start by reading the queue file, then write the updated queue with your new tasks.`;
+
+  const result = await runClaudeAgent('discovery', prompt, {
+    cwd: absolutePath,
+    timeout: DISCOVERY_TIMEOUT,
+    skipPermissions,
+  });
+
+  await updateAgentStatus(projectPath, 'teamLead', 'idle');
+
+  if (result.success) {
+    logger.info('Discovery agent completed');
+  } else {
+    logger.error(`Discovery agent failed: ${result.error}`);
+  }
+
+  return result;
+}

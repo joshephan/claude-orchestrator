@@ -13,7 +13,7 @@ import { setupShutdownHandlers, killAllProcesses, readPidFile, writePidFile, rem
 import { validateEnvironment, allValid, getFirstError } from '../core/validator.js';
 import { initProject, loadConfig, updateConfig, loadStatus, updateOrchestratorStatus, checkInitialized, getProjectFilePath } from '../core/project.js';
 import { loadQueue, getPendingTasks, getInProgressTasks, getQueueStats } from '../core/queue.js';
-import { processTask, updateCycleStats } from '../core/agent.js';
+import { processTask, updateCycleStats, runDiscovery } from '../core/agent.js';
 import { selectProjectDirectory, promptForConfiguration, confirm } from './prompts.js';
 import * as ui from './ui.js';
 import type { StartOptions, LogsOptions, Platform } from '../types.js';
@@ -204,14 +204,33 @@ export async function startCommand(options: StartOptions): Promise<void> {
       const tasksToProcess = [...inProgressTasks, ...pendingTasks].slice(0, config.maxTasks);
 
       if (tasksToProcess.length === 0) {
-        if (config.continuous) {
-          ui.showInfo('No tasks found. Waiting for new tasks...');
-          await sleep(30000); // Wait 30 seconds before checking again
-          continue;
-        } else {
-          ui.showInfo('No tasks to process.');
-          break;
+        // Run discovery to create tasks
+        ui.showProgress('No tasks found. Running discovery agent...');
+        const discoveryResult = await runDiscovery(projectPath, config, skipPermissions);
+
+        if (!discoveryResult.success) {
+          ui.showError('Discovery failed', discoveryResult.error);
+          if (!config.continuous) {
+            break;
+          }
         }
+
+        // Re-check for tasks after discovery
+        const newPendingTasks = await getPendingTasks(projectPath);
+        if (newPendingTasks.length === 0) {
+          if (config.continuous) {
+            ui.showInfo('No tasks created. Waiting for new tasks...');
+            await sleep(30000);
+            continue;
+          } else {
+            ui.showInfo('No tasks to process after discovery.');
+            break;
+          }
+        }
+
+        // Continue with newly discovered tasks
+        tasksToProcess.push(...newPendingTasks.slice(0, config.maxTasks));
+        ui.showSuccess(`Discovery found ${newPendingTasks.length} task(s)`);
       }
 
       ui.showProgress(`Processing ${tasksToProcess.length} task(s)`);
