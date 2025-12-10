@@ -20,9 +20,9 @@
   --color-success: #48BB78;
   --color-warning: #ECC94B;
   --color-error: #F56565;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
-  --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
@@ -31,7 +31,9 @@
 }
 
 /* Reset & Base */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -58,7 +60,10 @@ body {
   overflow-x: hidden;
 }
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   font-weight: 700;
   line-height: 1.3;
   color: var(--color-text);
@@ -179,6 +184,7 @@ li {
   background: var(--color-primary);
   color: white !important;
 }
+
 
 .nav-toggle {
   display: none;
@@ -328,6 +334,45 @@ li {
 
 .hero-producthunt {
   margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.parallax-btn-wrapper {
+  height: 60px;
+  display: flex;
+}
+
+.parallax-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  color: #1a1a2e !important;
+  height: 54px;
+  padding: 0 24px;
+  border-radius: 10px;
+  font-family: 'Teko', sans-serif;
+  font-weight: 500;
+  font-size: 1.2rem;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  border: 2px solid #72788a;
+  box-sizing: border-box;
+}
+
+.parallax-btn:hover {
+  background: #f8fafc;
+  color: #1a1a2e !important;
+  transform: translateY(-2px);
+}
+
+.parallax-btn .parallax-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
 }
 
 .hero-image {
@@ -556,7 +601,7 @@ li {
   padding: 4px 12px;
 }
 
-.command-card > p {
+.command-card>p {
   color: var(--color-text-light);
   margin-bottom: 16px;
 }
@@ -592,7 +637,7 @@ li {
   margin-bottom: 8px;
 }
 
-.interactive-mode > p {
+.interactive-mode>p {
   color: var(--color-text-light);
   margin-bottom: 24px;
 }
