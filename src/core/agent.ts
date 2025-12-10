@@ -159,12 +159,12 @@ function buildDeveloperPrompt(
 ${instructions.instructions}
 
 ## Files to Create
-${instructions.filesToCreate.map((f) => `- ${f}`).join('\n')}
+${instructions.filesToCreate?.map((f) => `- ${f}`).join('\n') || 'No files specified'}
 
 ## Architecture Pattern
-${instructions.architecture}
+${instructions.architecture || 'Not specified'}
 
-${instructions.apiEndpoints ? `## API Endpoints\n${instructions.apiEndpoints.map((e) => `- ${e}`).join('\n')}` : ''}
+${instructions.apiEndpoints?.length ? `## API Endpoints\n${instructions.apiEndpoints.map((e) => `- ${e}`).join('\n')}` : ''}
 
 ## Your Responsibilities
 1. Implement the task following the instructions exactly
@@ -221,11 +221,11 @@ function buildReviewPrompt(
 - **Platform**: ${config.platform}
 
 ## Developer's Report
-- **Summary**: ${report.summary}
-- **Files Created**: ${report.filesCreated.join(', ')}
-- **Files Modified**: ${report.filesModified.join(', ')}
-- **Build Status**: ${report.buildResult.status}
-- **Build Errors**: ${report.buildResult.errors}
+- **Summary**: ${report.summary || 'No summary provided'}
+- **Files Created**: ${report.filesCreated?.join(', ') || 'None'}
+- **Files Modified**: ${report.filesModified?.join(', ') || 'None'}
+- **Build Status**: ${report.buildResult?.status || 'Unknown'}
+- **Build Errors**: ${report.buildResult?.errors ?? 'Unknown'}
 
 ## Review Criteria
 1. Build status must be "success"

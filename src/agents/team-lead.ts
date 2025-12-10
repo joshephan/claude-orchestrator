@@ -181,12 +181,12 @@ You are reviewing a completed implementation from the developer.
 - **Platform**: ${config.platform}
 
 ### Developer's Report
-- **Summary**: ${report.summary}
-- **Files Created**: ${report.filesCreated.length > 0 ? report.filesCreated.join(', ') : 'None'}
-- **Files Modified**: ${report.filesModified.length > 0 ? report.filesModified.join(', ') : 'None'}
-- **Build Status**: ${report.buildResult.status}
-- **Build Errors**: ${report.buildResult.errors}
-${report.buildResult.output ? `- **Build Output**: ${report.buildResult.output}` : ''}
+- **Summary**: ${report.summary || 'No summary provided'}
+- **Files Created**: ${report.filesCreated?.length > 0 ? report.filesCreated.join(', ') : 'None'}
+- **Files Modified**: ${report.filesModified?.length > 0 ? report.filesModified.join(', ') : 'None'}
+- **Build Status**: ${report.buildResult?.status || 'Unknown'}
+- **Build Errors**: ${report.buildResult?.errors ?? 'Unknown'}
+${report.buildResult?.output ? `- **Build Output**: ${report.buildResult.output}` : ''}
 
 ---
 

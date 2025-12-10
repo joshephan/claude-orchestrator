@@ -105,12 +105,12 @@ export function buildImplementationPrompt(
 ${instructions.instructions}
 
 ### Files to Create
-${instructions.filesToCreate.map((f) => `- \`${f}\``).join('\n')}
+${instructions.filesToCreate?.map((f) => `- \`${f}\``).join('\n') || 'No files specified'}
 
 ### Architecture Pattern
-${instructions.architecture}
+${instructions.architecture || 'Not specified'}
 
-${instructions.apiEndpoints ? `### API Endpoints\n${instructions.apiEndpoints.map((e) => `- ${e}`).join('\n')}` : ''}
+${instructions.apiEndpoints?.length ? `### API Endpoints\n${instructions.apiEndpoints.map((e) => `- ${e}`).join('\n')}` : ''}
 
 ---
 
