@@ -1,6 +1,6 @@
 {
   "name": "@graygate/claude-orchestrator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI tool for orchestrating multi-agent development workflows using Claude Code",
   "type": "module",
   "main": "dist/index.js",
