@@ -96,7 +96,7 @@ export function killAllProcesses(): void {
  * @returns Array of command arguments
  */
 function buildClaudeArgs(
-  prompt: string,
+  _prompt: string,
   options: SpawnOptions
 ): string[] {
   const args = [

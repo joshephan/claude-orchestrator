@@ -1,12 +1,12 @@
 {
-  "name": "claude-orchestrator",
+  "name": "@graygate/claude-orchestrator",
   "version": "1.0.0",
   "description": "CLI tool for orchestrating multi-agent development workflows using Claude Code",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "claude-orchestrator": "./bin/cli.js"
+    "claude-orchestrator": "bin/cli.js"
   },
   "scripts": {
     "build": "tsc",
@@ -46,6 +46,7 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.9",
     "@types/node": "^20.17.9",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"

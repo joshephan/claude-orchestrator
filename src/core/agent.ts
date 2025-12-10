@@ -6,20 +6,18 @@
  */
 
 import path from 'path';
-import { runClaudeAgent, setupShutdownHandlers, killAllProcesses } from '../utils/process.js';
+import { runClaudeAgent } from '../utils/process.js';
 import { getFilePath, readJSON, writeJSON, resolvePath } from '../utils/files.js';
 import { logger } from '../utils/logger.js';
 import { updateAgentStatus, loadStatus, saveStatus } from './project.js';
 import { updateTaskStatus, setCurrentTask, completeTask, rejectTask } from './queue.js';
 import type {
   Task,
-  Platform,
   OrchestratorConfig,
   MessageFile,
   TaskAssignmentMessage,
   CompletionReportMessage,
   AgentResult,
-  CycleStats,
 } from '../types.js';
 
 // ============================================================================
@@ -70,24 +68,6 @@ async function readMessages(
 ): Promise<MessageFile> {
   const absolutePath = resolvePath(projectPath);
   return readJSON<MessageFile>(getFilePath(absolutePath, target));
-}
-
-/**
- * Write a message to a message file
- *
- * @param projectPath - Path to the project
- * @param target - Which message file to write to
- * @param message - Message to write
- */
-async function writeMessage(
-  projectPath: string,
-  target: 'toDeveloper' | 'toTeamLead',
-  message: TaskAssignmentMessage | CompletionReportMessage
-): Promise<void> {
-  const absolutePath = resolvePath(projectPath);
-  const messageFile = await readMessages(projectPath, target);
-  messageFile.messages.push(message);
-  await writeJSON(getFilePath(absolutePath, target), messageFile);
 }
 
 // ============================================================================

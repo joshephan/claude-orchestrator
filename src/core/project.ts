@@ -5,7 +5,6 @@
  * and directory structure management.
  */
 
-import path from 'path';
 import fs from 'fs-extra';
 import {
   getOrchestratorDir,
@@ -19,7 +18,6 @@ import {
 } from '../utils/files.js';
 import type {
   OrchestratorConfig,
-  Platform,
   TaskQueue,
   StatusFile,
   MessageFile,

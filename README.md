@@ -21,10 +21,10 @@ A CLI tool for orchestrating multi-agent development workflows using Claude Code
 
 ```bash
 # Install globally
-npm install -g claude-orchestrator
+npm install -g @graygate/claude-orchestrator
 
 # Or run directly with npx
-npx claude-orchestrator
+npx @graygate/claude-orchestrator
 ```
 
 ## Quick Start

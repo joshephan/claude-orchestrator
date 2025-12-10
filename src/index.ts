@@ -184,7 +184,21 @@ export {
 // Re-export utilities
 export { logger } from './utils/logger.js';
 export * from './utils/files.js';
-export * from './utils/process.js';
+export {
+  DEFAULT_TIMEOUT,
+  registerProcess,
+  unregisterProcess,
+  getProcess,
+  hasActiveProcesses,
+  killAllProcesses,
+  runClaudeAgent,
+  runCommand,
+  setupShutdownHandlers,
+  writePidFile,
+  readPidFile,
+  removePidFile,
+  isProcessRunning,
+} from './utils/process.js';
 
 // Re-export UI components
 export * as ui from './cli/ui.js';

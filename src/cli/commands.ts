@@ -8,13 +8,13 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { logger } from '../utils/logger.js';
-import { resolvePath, getFilePath, readTextSafe } from '../utils/files.js';
+import { resolvePath, readTextSafe } from '../utils/files.js';
 import { setupShutdownHandlers, killAllProcesses, readPidFile, writePidFile, removePidFile, isProcessRunning } from '../utils/process.js';
 import { validateEnvironment, allValid, getFirstError } from '../core/validator.js';
 import { initProject, loadConfig, updateConfig, loadStatus, updateOrchestratorStatus, checkInitialized, getProjectFilePath } from '../core/project.js';
-import { loadQueue, getPendingTasks, getInProgressTasks, getNextPendingTask, getQueueStats, addTask } from '../core/queue.js';
+import { loadQueue, getPendingTasks, getInProgressTasks, getQueueStats } from '../core/queue.js';
 import { processTask, updateCycleStats } from '../core/agent.js';
-import { selectProjectDirectory, promptForConfiguration, promptQuickStart, confirm } from './prompts.js';
+import { selectProjectDirectory, promptForConfiguration, confirm } from './prompts.js';
 import * as ui from './ui.js';
 import type { StartOptions, LogsOptions, Platform } from '../types.js';
 
