@@ -279,3 +279,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+Made by [Sanghoon Han from Parallax AI LLC](https://parallax.kr)

@@ -900,6 +900,21 @@ kbd {
   opacity: 0.7;
 }
 
+.made-by {
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+.made-by a {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.made-by a:hover {
+  color: var(--color-accent-dark);
+  text-decoration: underline;
+}
+
 /* ============================================
    Responsive Design
    ============================================ */
