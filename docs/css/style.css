@@ -326,6 +326,10 @@ li {
   background: var(--color-success);
 }
 
+.hero-producthunt {
+  margin-top: 20px;
+}
+
 .hero-image {
   flex: 1;
   min-width: 0;

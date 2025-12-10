@@ -4,6 +4,8 @@
 
 Stop developing. Let Claude Code handle everything.
 
+<a href="https://www.producthunt.com/products/claude-orchestrator?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-claude&#0045;orchestrator" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1048642&theme=light&t=1765370193768" alt="Claude&#0032;Orchestrator - Stop&#0032;developing&#0046;&#0032;Let&#0032;Claude&#0032;Code&#0032;handle&#0032;everything&#0046; | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+
 ## Features
 
 - **Multi-Agent Orchestration**: Coordinate team lead and developer agents
