@@ -2,7 +2,7 @@
 
 **THIS IS NOT OFFICIAL CLAUDE CODE TOOL**
 
-A CLI tool for orchestrating multi-agent development workflows using Claude Code. This tool manages a team lead and developer agent collaboration system to automate software development tasks.
+Stop developing. Let Claude Code handle everything.
 
 ## Features
 

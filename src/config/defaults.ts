@@ -18,7 +18,7 @@ export const APP_NAME = 'claude-orchestrator';
 export const APP_VERSION = '1.0.0';
 
 /** Application description */
-export const APP_DESCRIPTION = 'CLI tool for orchestrating multi-agent development workflows using Claude Code';
+export const APP_DESCRIPTION = 'Stop developing. Let Claude Code handle everything.';
 
 // ============================================================================
 // Directory and File Names
