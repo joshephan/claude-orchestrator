@@ -40,23 +40,23 @@ import type {
 // Constants
 // ============================================================================
 
-/** Default timeout for planner (5 minutes) */
-const PLANNER_TIMEOUT = 5 * 60 * 1000;
+/** Default timeout for planner (30 minutes) */
+const PLANNER_TIMEOUT = 30 * 60 * 1000;
 
-/** Default timeout for designer (5 minutes) */
-const DESIGNER_TIMEOUT = 5 * 60 * 1000;
+/** Default timeout for designer (30 minutes) */
+const DESIGNER_TIMEOUT = 30 * 60 * 1000;
 
-/** Default timeout for tech lead (5 minutes) */
-const TECH_LEAD_TIMEOUT = 5 * 60 * 1000;
+/** Default timeout for tech lead (30 minutes) */
+const TECH_LEAD_TIMEOUT = 30 * 60 * 1000;
 
-/** Default timeout for team lead - legacy alias (5 minutes) */
-const TEAM_LEAD_TIMEOUT = 5 * 60 * 1000;
+/** Default timeout for team lead - legacy alias (30 minutes) */
+const TEAM_LEAD_TIMEOUT = 30 * 60 * 1000;
 
-/** Default timeout for developer (15 minutes) */
-const DEVELOPER_TIMEOUT = 15 * 60 * 1000;
+/** Default timeout for developer (30 minutes) */
+const DEVELOPER_TIMEOUT = 30 * 60 * 1000;
 
-/** Default timeout for review (3 minutes) */
-const REVIEW_TIMEOUT = 3 * 60 * 1000;
+/** Default timeout for review (30 minutes) */
+const REVIEW_TIMEOUT = 30 * 60 * 1000;
 
 // ============================================================================
 // Message File Operations

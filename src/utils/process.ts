@@ -13,8 +13,11 @@ import type { SpawnOptions, AgentResult } from '../types.js';
 // Constants
 // ============================================================================
 
-/** Default timeout for agent execution (15 minutes) */
-export const DEFAULT_TIMEOUT = 15 * 60 * 1000;
+/** Default timeout for agent execution (30 minutes) */
+export const DEFAULT_TIMEOUT = 30 * 60 * 1000;
+
+/** Warning threshold for no response (5 minutes) */
+const NO_RESPONSE_WARNING_THRESHOLD = 5 * 60 * 1000;
 
 /** Default tools allowed for Claude agent */
 export const DEFAULT_ALLOWED_TOOLS = [
@@ -133,6 +136,8 @@ export async function runClaudeAgent(
     let stdout = '';
     let stderr = '';
     let timedOut = false;
+    let lastActivityTime = Date.now();
+    let warningCount = 0;
 
     // Build full command string to avoid deprecation warning
     const command = ['claude', ...args].join(' ');
@@ -151,16 +156,28 @@ export async function runClaudeAgent(
     // Handle stdout
     proc.stdout?.on('data', (data: Buffer) => {
       stdout += data.toString();
+      lastActivityTime = Date.now();
     });
 
     // Handle stderr
     proc.stderr?.on('data', (data: Buffer) => {
       stderr += data.toString();
+      lastActivityTime = Date.now();
     });
 
     // Send prompt via stdin
     proc.stdin?.write(prompt);
     proc.stdin?.end();
+
+    // Set up no-response warning check (every minute)
+    const warningCheckId = setInterval(() => {
+      const timeSinceLastActivity = Date.now() - lastActivityTime;
+      if (timeSinceLastActivity >= NO_RESPONSE_WARNING_THRESHOLD) {
+        warningCount++;
+        const minutesIdle = Math.floor(timeSinceLastActivity / 60000);
+        console.warn(`[WARNING] Agent '${id}' has not responded for ${minutesIdle} minutes (warning #${warningCount})`);
+      }
+    }, 60000); // Check every minute
 
     // Set up timeout
     const timeoutId = setTimeout(() => {
@@ -171,6 +188,7 @@ export async function runClaudeAgent(
     // Handle process exit
     proc.on('close', (code) => {
       clearTimeout(timeoutId);
+      clearInterval(warningCheckId);
       unregisterProcess(id);
 
       if (timedOut) {
@@ -193,6 +211,7 @@ export async function runClaudeAgent(
     // Handle spawn errors
     proc.on('error', (err) => {
       clearTimeout(timeoutId);
+      clearInterval(warningCheckId);
       unregisterProcess(id);
 
       resolve({
