@@ -241,27 +241,49 @@ export async function startCommand(options: StartOptions): Promise<void> {
       let completed = 0;
       let failed = 0;
 
-      for (const task of tasksToProcess) {
-        ui.startSpinner(`Processing: ${task.id} - ${task.title}`);
+      const isQuiet = options.quiet ?? false;
 
-        const result = await processTaskV2(projectPath, task, config, skipPermissions);
+      for (const task of tasksToProcess) {
+        // Only show spinner in quiet mode (minimal output)
+        if (isQuiet) {
+          ui.startSpinner(`Processing: ${task.id} - ${task.title}`);
+        } else {
+          // In verbose mode, show a clear task header
+          console.log();
+          console.log(ui.colors.bold(`${'═'.repeat(70)}`));
+          console.log(ui.colors.bold(`  TASK: ${task.id} - ${task.title}`));
+          console.log(ui.colors.bold(`${'═'.repeat(70)}`));
+        }
+
+        const result = await processTaskV2(projectPath, task, config, skipPermissions, isQuiet);
 
         if (result.success) {
           completed++;
-          ui.spinnerSuccess(`Task ${task.id} completed`);
+          if (isQuiet) {
+            ui.spinnerSuccess(`Task ${task.id} completed`);
 
-          // Show design verification result if available
-          if (result.designVerification) {
-            const dv = result.designVerification;
-            if (dv.discrepancies.length > 0) {
-              ui.showWarning(
-                `Design verification: ${dv.matchPercentage.toFixed(0)}% match, ${dv.discrepancies.length} discrepancy(ies) found`
-              );
+            // Show design verification result only in quiet mode (verbose already shows it)
+            if (result.designVerification) {
+              const dv = result.designVerification;
+              if (dv.discrepancies.length > 0) {
+                ui.showWarning(
+                  `Design verification: ${dv.matchPercentage.toFixed(0)}% match, ${dv.discrepancies.length} discrepancy(ies) found`
+                );
+              }
             }
+          } else {
+            // Verbose mode - show summary
+            console.log();
+            ui.showSuccess(`Task ${task.id} completed successfully`);
           }
         } else {
           failed++;
-          ui.spinnerFail(`Task ${task.id} failed`);
+          if (isQuiet) {
+            ui.spinnerFail(`Task ${task.id} failed`);
+          } else {
+            console.log();
+            ui.showError(`Task ${task.id} failed`);
+          }
           if (result.error) {
             ui.showError(`  Phase: ${result.phase || 'unknown'}`, result.error);
           }

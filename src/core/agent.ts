@@ -21,6 +21,9 @@ import { buildTechLeadPrompt } from '../agents/team-lead.js';
 import { extractCSSTokens } from '../utils/css-extractor.js';
 import { compareDesignTokens, createVerificationMessage } from '../utils/design-comparator.js';
 
+// UI utilities for verbose output
+import * as ui from '../cli/ui.js';
+
 import type {
   Task,
   OrchestratorConfig,
@@ -890,13 +893,15 @@ export interface ProcessTaskResultV2 {
  * @param task - Task to process
  * @param config - Project configuration
  * @param skipPermissions - Whether to skip permission prompts
+ * @param quiet - Whether to suppress verbose output (default: false = verbose)
  * @returns Task result with error details
  */
 export async function processTaskV2(
   projectPath: string,
   task: Task,
   config: OrchestratorConfig,
-  skipPermissions = false
+  skipPermissions = false,
+  quiet = false
 ): Promise<ProcessTaskResultV2> {
   logger.info(`Processing task (4-agent pipeline): ${task.id} - ${task.title}`);
 
@@ -909,6 +914,11 @@ export async function processTaskV2(
     // Phase 1: Planner
     // =========================================================================
     logger.info(`[Phase 1/6] Planner analyzing task ${task.id}`);
+    if (!quiet) {
+      ui.showAgentPhase(1, 'Planner', task.id);
+      ui.showAgentActivity('Planner', 'Analyzing task and creating planning document...');
+    }
+
     const plannerResult = await runPlanner(projectPath, task, config, skipPermissions);
     if (!plannerResult.success) {
       const error = plannerResult.error || 'Planner failed to create planning document';
@@ -926,10 +936,25 @@ export async function processTaskV2(
       return { success: false, error: 'Planner did not create planning document', phase: 'planner' };
     }
 
+    // Show planning document in verbose mode
+    if (!quiet) {
+      ui.showPlanningDocument({
+        productVision: planningDoc.productVision,
+        coreFeatures: planningDoc.coreFeatures,
+        userFlows: planningDoc.userFlows,
+        requirements: planningDoc.requirements,
+      });
+    }
+
     // =========================================================================
     // Phase 2: Designer
     // =========================================================================
     logger.info(`[Phase 2/6] Designer creating design spec for ${task.id}`);
+    if (!quiet) {
+      ui.showAgentPhase(2, 'Designer', task.id);
+      ui.showAgentActivity('Designer', 'Creating design tokens and component specifications...');
+    }
+
     const designerResult = await runDesigner(projectPath, task, planningDoc, config, skipPermissions);
     if (!designerResult.success) {
       const error = designerResult.error || 'Designer failed to create design specification';
@@ -947,6 +972,14 @@ export async function processTaskV2(
       return { success: false, error: 'Designer did not create design specification', phase: 'designer' };
     }
 
+    // Show design specification in verbose mode
+    if (!quiet) {
+      ui.showDesignSpecification({
+        designTokens: designSpec.designTokens,
+        componentSpecs: designSpec.componentSpecs,
+      });
+    }
+
     // Save design tokens for later verification
     await writeJSON(getFilePath(resolvePath(projectPath), 'designTokens'), designSpec.designTokens);
 
@@ -954,6 +987,11 @@ export async function processTaskV2(
     // Phase 3: Tech Lead
     // =========================================================================
     logger.info(`[Phase 3/6] Tech Lead creating instructions for ${task.id}`);
+    if (!quiet) {
+      ui.showAgentPhase(3, 'Tech Lead', task.id);
+      ui.showAgentActivity('Tech Lead', 'Analyzing planning and design docs, creating implementation instructions...');
+    }
+
     const techLeadResult = await runTechLead(projectPath, task, planningDoc, designSpec, config, skipPermissions);
     if (!techLeadResult.success) {
       const error = techLeadResult.error || 'Tech Lead failed to create instructions';
@@ -961,15 +999,51 @@ export async function processTaskV2(
       return { success: false, error, phase: 'tech_lead' };
     }
 
+    // Read and show tech lead instructions in verbose mode
+    if (!quiet) {
+      const techLeadMessages = await readMessages(projectPath, 'toDeveloper');
+      const techLeadInstructions = techLeadMessages.messages.find(
+        (m) => m.type === 'task_assignment' && m.taskId === task.id
+      ) as TaskAssignmentMessage | undefined;
+
+      if (techLeadInstructions) {
+        ui.showTechLeadInstructions({
+          title: techLeadInstructions.title,
+          filesToCreate: techLeadInstructions.filesToCreate || [],
+          architecture: techLeadInstructions.architecture || 'Not specified',
+        });
+      }
+    }
+
     // =========================================================================
     // Phase 4: Developer
     // =========================================================================
     logger.info(`[Phase 4/6] Developer implementing ${task.id}`);
+    if (!quiet) {
+      ui.showAgentPhase(4, 'Developer', task.id);
+      ui.showAgentActivity('Developer', 'Implementing task based on Tech Lead instructions...');
+    }
+
     const developerResult = await runDeveloper(projectPath, task, config, skipPermissions);
     if (!developerResult.success) {
       const error = developerResult.error || 'Developer failed to implement task';
       logger.error(`Developer failed for ${task.id}: ${error}`);
       return { success: false, error, phase: 'developer' };
+    }
+
+    // Read and show developer report in verbose mode
+    const devMessages = await readMessages(projectPath, 'toTeamLead');
+    const devReport = devMessages.messages.find(
+      (m) => m.type === 'completion_report' && m.taskId === task.id
+    ) as CompletionReportMessage | undefined;
+
+    if (!quiet && devReport) {
+      ui.showDeveloperReport({
+        summary: devReport.summary,
+        filesCreated: devReport.filesCreated,
+        filesModified: devReport.filesModified,
+        buildResult: devReport.buildResult,
+      });
     }
 
     // Update status to awaiting review
@@ -979,11 +1053,20 @@ export async function processTaskV2(
     // Phase 5: Tech Lead Review
     // =========================================================================
     logger.info(`[Phase 5/6] Tech Lead reviewing ${task.id}`);
+    if (!quiet) {
+      ui.showAgentPhase(5, 'Review', task.id);
+      ui.showAgentActivity('Tech Lead', 'Reviewing implementation and build results...');
+    }
+
     const reviewResult = await runReview(projectPath, task, config, skipPermissions);
 
     if (!reviewResult.approved) {
       await rejectTask(projectPath, task.id, reviewResult.reason || 'Review failed');
       logger.warn(`Task ${task.id} rejected: ${reviewResult.reason}`);
+
+      if (!quiet) {
+        ui.showWarning(`Review rejected: ${reviewResult.reason}`);
+      }
 
       await logger.logTaskCompletion(
         task.id,
@@ -1001,11 +1084,29 @@ export async function processTaskV2(
       return { success: false, error: reviewResult.reason || 'Review failed', phase: 'review' };
     }
 
+    if (!quiet) {
+      ui.showSuccess('Review approved');
+    }
+
     // =========================================================================
     // Phase 6: Design Verification (warning only, does not block)
     // =========================================================================
     logger.info(`[Phase 6/6] Running design verification for ${task.id}`);
+    if (!quiet) {
+      ui.showAgentPhase(6, 'Verification', task.id);
+      ui.showAgentActivity('Designer', 'Comparing implementation with design tokens...');
+    }
+
     const verificationResult = await runDesignVerification(projectPath, task, designSpec, config);
+
+    // Show verification results in verbose mode
+    if (!quiet) {
+      ui.showDesignVerification({
+        verified: verificationResult.verified,
+        matchPercentage: verificationResult.matchPercentage,
+        discrepancies: verificationResult.discrepancies,
+      });
+    }
 
     // Log verification results but don't fail the task
     if (!verificationResult.verified) {

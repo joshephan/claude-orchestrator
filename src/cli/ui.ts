@@ -495,3 +495,220 @@ export function showInteractiveHelp(): void {
   console.log(`  ${colors.highlight('h')} or ${colors.highlight('help')}    Show this help`);
   console.log();
 }
+
+// ============================================================================
+// Agent Communication Display (Verbose Mode)
+// ============================================================================
+
+/**
+ * Display agent phase header
+ *
+ * @param phase - Phase number (1-6)
+ * @param agentName - Name of the agent
+ * @param taskId - Task ID
+ */
+export function showAgentPhase(phase: number, agentName: string, taskId: string): void {
+  const agentColors: Record<string, (text: string) => string> = {
+    Planner: colors.info,
+    Designer: colors.highlight,
+    'Tech Lead': colors.warning,
+    Developer: colors.success,
+    Review: colors.muted,
+    Verification: colors.muted,
+  };
+
+  const colorFn = agentColors[agentName] || colors.muted;
+  console.log();
+  console.log(colors.bold(`${'─'.repeat(60)}`));
+  console.log(colors.bold(`  Phase ${phase}/6: ${colorFn(agentName)} - ${taskId}`));
+  console.log(colors.bold(`${'─'.repeat(60)}`));
+}
+
+/**
+ * Display planning document summary
+ *
+ * @param planningDoc - Planning document from Planner agent
+ */
+export function showPlanningDocument(planningDoc: {
+  productVision: string;
+  coreFeatures: Array<{ name: string; description: string; priority: string }>;
+  userFlows: Array<{ name: string; description: string }>;
+  requirements: string[];
+}): void {
+  console.log();
+  console.log(colors.info('  📋 Planning Document:'));
+  console.log(colors.muted('  ────────────────────────────────────────'));
+  console.log(`  ${colors.bold('Vision:')} ${truncateMultiline(planningDoc.productVision, 70)}`);
+  console.log();
+  console.log(`  ${colors.bold('Core Features:')}`);
+  planningDoc.coreFeatures.forEach((f, i) => {
+    const priorityColor = f.priority === 'high' ? colors.error : f.priority === 'medium' ? colors.warning : colors.muted;
+    console.log(`    ${i + 1}. ${f.name} ${priorityColor(`[${f.priority}]`)}`);
+    console.log(`       ${colors.muted(truncateMultiline(f.description, 50))}`);
+  });
+  console.log();
+  console.log(`  ${colors.bold('User Flows:')} ${planningDoc.userFlows.map(f => f.name).join(', ')}`);
+  console.log(`  ${colors.bold('Requirements:')} ${planningDoc.requirements.length} items`);
+  console.log(colors.muted('  ────────────────────────────────────────'));
+}
+
+/**
+ * Display design specification summary
+ *
+ * @param designSpec - Design specification from Designer agent
+ */
+export function showDesignSpecification(designSpec: {
+  designTokens: {
+    colors: Record<string, string>;
+    fonts: Record<string, { family: string; size: string; weight: string }>;
+    spacing: Record<string, string>;
+  };
+  componentSpecs: Array<{ name: string; description: string }>;
+}): void {
+  console.log();
+  console.log(colors.highlight('  🎨 Design Specification:'));
+  console.log(colors.muted('  ────────────────────────────────────────'));
+
+  // Colors
+  const colorEntries = Object.entries(designSpec.designTokens.colors).slice(0, 5);
+  console.log(`  ${colors.bold('Colors:')}`);
+  colorEntries.forEach(([name, value]) => {
+    console.log(`    • ${name}: ${value}`);
+  });
+  if (Object.keys(designSpec.designTokens.colors).length > 5) {
+    console.log(colors.muted(`    ... and ${Object.keys(designSpec.designTokens.colors).length - 5} more`));
+  }
+
+  // Fonts
+  console.log();
+  console.log(`  ${colors.bold('Typography:')}`);
+  Object.entries(designSpec.designTokens.fonts).slice(0, 3).forEach(([name, font]) => {
+    console.log(`    • ${name}: ${font.family} ${font.size} (${font.weight})`);
+  });
+
+  // Spacing
+  console.log();
+  console.log(`  ${colors.bold('Spacing:')} ${Object.entries(designSpec.designTokens.spacing).map(([k, v]) => `${k}:${v}`).join(', ')}`);
+
+  // Components
+  console.log();
+  console.log(`  ${colors.bold('Components:')} ${designSpec.componentSpecs.length} defined`);
+  designSpec.componentSpecs.slice(0, 3).forEach(c => {
+    console.log(`    • ${c.name}`);
+  });
+
+  console.log(colors.muted('  ────────────────────────────────────────'));
+}
+
+/**
+ * Display tech lead instructions summary
+ *
+ * @param instructions - Instructions from Tech Lead
+ */
+export function showTechLeadInstructions(instructions: {
+  title: string;
+  filesToCreate: string[];
+  architecture: string;
+}): void {
+  console.log();
+  console.log(colors.warning('  📝 Tech Lead Instructions:'));
+  console.log(colors.muted('  ────────────────────────────────────────'));
+  console.log(`  ${colors.bold('Task:')} ${instructions.title}`);
+  console.log(`  ${colors.bold('Architecture:')} ${instructions.architecture}`);
+  console.log();
+  console.log(`  ${colors.bold('Files to create:')}`);
+  instructions.filesToCreate.slice(0, 5).forEach(f => {
+    console.log(`    • ${f}`);
+  });
+  if (instructions.filesToCreate.length > 5) {
+    console.log(colors.muted(`    ... and ${instructions.filesToCreate.length - 5} more`));
+  }
+  console.log(colors.muted('  ────────────────────────────────────────'));
+}
+
+/**
+ * Display developer completion report
+ *
+ * @param report - Completion report from Developer
+ */
+export function showDeveloperReport(report: {
+  summary?: string;
+  filesCreated?: string[];
+  filesModified?: string[];
+  buildResult?: { status: string; errors?: number };
+}): void {
+  console.log();
+  console.log(colors.success('  ✅ Developer Report:'));
+  console.log(colors.muted('  ────────────────────────────────────────'));
+  if (report.summary) {
+    console.log(`  ${colors.bold('Summary:')} ${truncateMultiline(report.summary, 60)}`);
+  }
+  console.log(`  ${colors.bold('Files Created:')} ${report.filesCreated?.length || 0}`);
+  report.filesCreated?.slice(0, 3).forEach(f => {
+    console.log(`    + ${colors.success(f)}`);
+  });
+  console.log(`  ${colors.bold('Files Modified:')} ${report.filesModified?.length || 0}`);
+  report.filesModified?.slice(0, 3).forEach(f => {
+    console.log(`    ~ ${colors.warning(f)}`);
+  });
+  if (report.buildResult) {
+    const statusColor = report.buildResult.status === 'success' ? colors.success : colors.error;
+    console.log(`  ${colors.bold('Build:')} ${statusColor(report.buildResult.status)}`);
+  }
+  console.log(colors.muted('  ────────────────────────────────────────'));
+}
+
+/**
+ * Display design verification result
+ *
+ * @param verification - Verification result
+ */
+export function showDesignVerification(verification: {
+  verified: boolean;
+  matchPercentage: number;
+  discrepancies: Array<{ tokenName: string; type: string; expectedValue: string; actualValue: string; severity: string }>;
+}): void {
+  console.log();
+  const icon = verification.verified ? '✓' : '⚠';
+  const titleColor = verification.verified ? colors.success : colors.warning;
+  console.log(titleColor(`  ${icon} Design Verification: ${verification.matchPercentage.toFixed(0)}% match`));
+
+  if (verification.discrepancies.length > 0) {
+    console.log(colors.muted('  ────────────────────────────────────────'));
+    console.log(`  ${colors.bold('Discrepancies:')} ${verification.discrepancies.length} found`);
+    verification.discrepancies.slice(0, 5).forEach(d => {
+      const severityColor = d.severity === 'error' ? colors.error : colors.warning;
+      console.log(`    • ${d.tokenName} (${d.type}): ${severityColor(d.expectedValue)} → ${d.actualValue}`);
+    });
+    if (verification.discrepancies.length > 5) {
+      console.log(colors.muted(`    ... and ${verification.discrepancies.length - 5} more`));
+    }
+  }
+}
+
+/**
+ * Display agent activity message
+ *
+ * @param agent - Agent name
+ * @param message - Activity message
+ */
+export function showAgentActivity(agent: string, message: string): void {
+  const timestamp = new Date().toLocaleTimeString();
+  const agentColors: Record<string, (text: string) => string> = {
+    Planner: colors.info,
+    Designer: colors.highlight,
+    'Tech Lead': colors.warning,
+    Developer: colors.success,
+  };
+  const colorFn = agentColors[agent] || colors.muted;
+  console.log(`  ${colors.muted(timestamp)} ${colorFn(`[${agent}]`)} ${message}`);
+}
+
+/**
+ * Truncate multiline text for display
+ */
+function truncateMultiline(str: string, maxLength: number): string {
+  const cleaned = str.replace(/\n/g, ' ').trim();
+  if (cleaned.length <= maxLength) return cleaned;
+  return cleaned.substring(0, maxLength - 3) + '...';
+}

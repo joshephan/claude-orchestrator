@@ -54,6 +54,7 @@ export function createProgram(): Command {
     .option('-c, --continuous', 'Enable continuous discovery mode')
     .option('-d, --dry-run', 'Preview without execution')
     .option('--skip-permissions', 'Skip Claude permission prompts')
+    .option('-q, --quiet', 'Quiet mode - minimal output (default: verbose)')
     .action(async (options: {
       scope?: string;
       goals?: string;
@@ -62,6 +63,7 @@ export function createProgram(): Command {
       continuous?: boolean;
       dryRun?: boolean;
       skipPermissions?: boolean;
+      quiet?: boolean;
     }) => {
       const startOptions: StartOptions = {
         scope: options.scope,
@@ -71,6 +73,7 @@ export function createProgram(): Command {
         continuous: options.continuous,
         dryRun: options.dryRun,
         skipPermissions: options.skipPermissions,
+        quiet: options.quiet,
       };
       await startCommand(startOptions);
     });

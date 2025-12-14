@@ -523,6 +523,8 @@ export interface StartOptions {
   dryRun?: boolean;
   /** Skip permission prompts */
   skipPermissions?: boolean;
+  /** Quiet mode - minimal output */
+  quiet?: boolean;
 }
 
 /**
