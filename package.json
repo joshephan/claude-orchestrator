@@ -1,6 +1,6 @@
 {
   "name": "@graygate/claude-orchestrator",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Stop developing. Let Claude Code handle everything.",
   "type": "module",
   "main": "dist/index.js",

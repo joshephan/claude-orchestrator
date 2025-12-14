@@ -8,11 +8,13 @@ Stop developing. Let Claude Code handle everything.
 
 ## Features
 
-- **Multi-Agent Orchestration**: Coordinate team lead and developer agents
+- **4-Agent Pipeline**: Coordinate Planner, Designer, Tech Lead, and Developer agents
+- **Design Token Verification**: Automatically compare design specifications with implementation
 - **Project Management**: Initialize and manage development projects
 - **Task Queue**: Automatic task discovery, assignment, and tracking
 - **Progress Monitoring**: Real-time status updates and logging
 - **Checkpoint Recovery**: Stop and resume workflows at any point
+- **Figma Integration** (Optional): Extract design tokens from Figma files
 
 ## Prerequisites
 
@@ -54,6 +56,59 @@ claude-orchestrator status
 claude-orchestrator logs --follow
 ```
 
+## 4-Agent Pipeline
+
+Claude Orchestrator uses a sophisticated 4-agent pipeline to handle development tasks:
+
+```
+┌─────────────────────────────────┐
+│ 1. DISCOVERY                    │
+│    - Scan project structure     │
+│    - Identify tasks             │
+│    - Create tasks in queue      │
+└───────────────┬─────────────────┘
+                ▼
+┌─────────────────────────────────┐
+│ 2. PLANNER                      │
+│    - Define product vision      │
+│    - Break down features        │
+│    - Design user flows          │
+│    - Document requirements      │
+└───────────────┬─────────────────┘
+                ▼
+┌─────────────────────────────────┐
+│ 3. DESIGNER                     │
+│    - Create design tokens       │
+│    - Define color, typography   │
+│    - Specify component styles   │
+│    - (Optional) Figma sync      │
+└───────────────┬─────────────────┘
+                ▼
+┌─────────────────────────────────┐
+│ 4. TECH LEAD                    │
+│    - Analyze planning docs      │
+│    - Review design specs        │
+│    - Write implementation guide │
+│    - Define architecture        │
+└───────────────┬─────────────────┘
+                ▼
+┌─────────────────────────────────┐
+│ 5. DEVELOPER                    │
+│    - Read instructions          │
+│    - Implement features         │
+│    - Apply design tokens        │
+│    - Run build verification     │
+└───────────────┬─────────────────┘
+                ▼
+┌─────────────────────────────────┐
+│ 6. REVIEW & VERIFICATION        │
+│    - Tech Lead reviews code     │
+│    - Compare design tokens      │
+│    - Report discrepancies       │
+│    - Log completion             │
+└─────────────────────────────────┘
+```
+
 ## Commands
 
 ### `claude-orchestrator init`
@@ -92,7 +147,7 @@ claude-orchestrator status
 ```
 
 Displays:
-- Active agents and their status
+- Active agents (Planner, Designer, Tech Lead, Developer)
 - Current task being processed
 - Queue statistics
 - Recent activity
@@ -118,11 +173,6 @@ Stop running agents gracefully.
 claude-orchestrator stop
 ```
 
-This command:
-- Sends graceful shutdown signal to active agents
-- Saves current state for later resume
-- Marks in-progress tasks appropriately
-
 ### `claude-orchestrator resume`
 
 Resume from the last checkpoint.
@@ -130,11 +180,6 @@ Resume from the last checkpoint.
 ```bash
 claude-orchestrator resume
 ```
-
-This command:
-- Loads saved state from previous run
-- Continues processing in-progress tasks
-- Restarts agent processes
 
 ## Interactive Mode
 
@@ -154,14 +199,18 @@ The orchestrator creates a `.claude-orchestrator/` directory in your project wit
 
 ```
 .claude-orchestrator/
-├── config.json      # Project configuration
-├── status.json      # Current agent status
-├── queue.json       # Task queue
-├── messages/        # Inter-agent communication
-│   ├── to-developer.json
-│   └── to-team-lead.json
+├── config.json           # Project configuration
+├── status.json           # Current agent status
+├── queue.json            # Task queue
+├── messages/             # Inter-agent communication
+│   ├── to-designer.json  # Planner → Designer
+│   ├── to-tech-lead.json # Designer → Tech Lead
+│   └── to-developer.json # Tech Lead → Developer
+├── design/               # Design artifacts
+│   ├── tokens.json       # Design tokens
+│   └── verification-report.json
 └── logs/
-    └── log.md       # Development log
+    └── log.md            # Development log
 ```
 
 ### config.json
@@ -176,42 +225,50 @@ The orchestrator creates a `.claude-orchestrator/` directory in your project wit
   "goals": ["goal1", "goal2"],
   "platform": "web",
   "maxTasks": 10,
-  "continuous": false
+  "continuous": false,
+  "figma": {
+    "enabled": false,
+    "fileKey": "optional-figma-file-key",
+    "accessToken": "optional-figma-access-token"
+  }
 }
 ```
 
-## Workflow
+## Design Token Verification
 
+The Designer agent creates design tokens that are verified against the implementation:
+
+### Design Tokens Structure
+
+```json
+{
+  "colors": {
+    "primary": "#1E88E5",
+    "secondary": "#FF5722",
+    "background": "#FFFFFF"
+  },
+  "fonts": {
+    "heading": {
+      "family": "Inter",
+      "size": "24px",
+      "weight": "700"
+    }
+  },
+  "spacing": {
+    "sm": "8px",
+    "md": "16px",
+    "lg": "24px"
+  }
+}
 ```
-┌─────────────────────────────────┐
-│ 1. DISCOVERY (optional)         │
-│    - Scan project structure     │
-│    - Identify missing features  │
-│    - Create tasks in queue      │
-└───────────────┬─────────────────┘
-                ▼
-┌─────────────────────────────────┐
-│ 2. TEAM LEAD                    │
-│    - Analyze task requirements  │
-│    - Study reference code       │
-│    - Write implementation guide │
-└───────────────┬─────────────────┘
-                ▼
-┌─────────────────────────────────┐
-│ 3. DEVELOPER                    │
-│    - Read instructions          │
-│    - Implement features         │
-│    - Run verification           │
-│    - Submit completion report   │
-└───────────────┬─────────────────┘
-                ▼
-┌─────────────────────────────────┐
-│ 4. REVIEW                       │
-│    - Verify implementation      │
-│    - Check build status         │
-│    - Log completion/rejection   │
-└─────────────────────────────────┘
-```
+
+### Verification Process
+
+1. Designer creates design specification with tokens
+2. Developer implements using the tokens
+3. After implementation, CSS tokens are extracted from the code
+4. Tokens are compared with tolerance levels
+5. Discrepancies are reported (warnings only, won't block completion)
 
 ## Task States
 
@@ -229,7 +286,7 @@ pending → in_progress → awaiting_review → completed
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/claude-orchestrator.git
+git clone https://github.com/graygate/claude-orchestrator.git
 cd claude-orchestrator
 
 # Install dependencies

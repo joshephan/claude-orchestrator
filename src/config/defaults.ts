@@ -5,20 +5,25 @@
  * the orchestrator application.
  */
 
+import { createRequire } from 'module';
 import type { Platform } from '../types.js';
+
+// Load package.json to get version dynamically
+const require = createRequire(import.meta.url);
+const packageJson = require('../../package.json') as { name: string; version: string; description: string };
 
 // ============================================================================
 // Application Info
 // ============================================================================
 
 /** Application name */
-export const APP_NAME = 'claude-orchestrator';
+export const APP_NAME = packageJson.name.replace('@graygate/', '');
 
 /** Application version */
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = packageJson.version;
 
 /** Application description */
-export const APP_DESCRIPTION = 'Stop developing. Let Claude Code handle everything.';
+export const APP_DESCRIPTION = packageJson.description;
 
 // ============================================================================
 // Directory and File Names

@@ -13,7 +13,7 @@ import { setupShutdownHandlers, killAllProcesses, readPidFile, writePidFile, rem
 import { validateEnvironment, allValid, getFirstError } from '../core/validator.js';
 import { initProject, loadConfig, updateConfig, loadStatus, updateOrchestratorStatus, checkInitialized, getProjectFilePath } from '../core/project.js';
 import { loadQueue, getPendingTasks, getInProgressTasks, getQueueStats } from '../core/queue.js';
-import { processTask, updateCycleStats, runDiscovery } from '../core/agent.js';
+import { processTaskV2, updateCycleStats, runDiscovery } from '../core/agent.js';
 import { selectProjectDirectory, promptForConfiguration, confirm } from './prompts.js';
 import * as ui from './ui.js';
 import type { StartOptions, LogsOptions, Platform } from '../types.js';
@@ -244,11 +244,21 @@ export async function startCommand(options: StartOptions): Promise<void> {
       for (const task of tasksToProcess) {
         ui.startSpinner(`Processing: ${task.id} - ${task.title}`);
 
-        const result = await processTask(projectPath, task, config, skipPermissions);
+        const result = await processTaskV2(projectPath, task, config, skipPermissions);
 
         if (result.success) {
           completed++;
           ui.spinnerSuccess(`Task ${task.id} completed`);
+
+          // Show design verification result if available
+          if (result.designVerification) {
+            const dv = result.designVerification;
+            if (dv.discrepancies.length > 0) {
+              ui.showWarning(
+                `Design verification: ${dv.matchPercentage.toFixed(0)}% match, ${dv.discrepancies.length} discrepancy(ies) found`
+              );
+            }
+          }
         } else {
           failed++;
           ui.spinnerFail(`Task ${task.id} failed`);

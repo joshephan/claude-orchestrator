@@ -13,25 +13,25 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Claude Orchestrator - Multi-Agent Development Automation</title>
-  <meta name="description" content="Stop developing. Let Claude Code handle everything.">
+  <title>Claude Orchestrator - 4-Agent Development Automation</title>
+  <meta name="description" content="Stop developing. Let Claude Code handle everything with 4-agent AI collaboration.">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Claude Orchestrator - Multi-Agent Development Automation">
-  <meta property="og:description" content="Stop developing. Let Claude Code handle everything.">
+  <meta property="og:title" content="Claude Orchestrator - 4-Agent Development Automation">
+  <meta property="og:description" content="Stop developing. Let Claude Code handle everything with 4-agent AI collaboration.">
   <meta property="og:image" content="https://joshephan.github.io/claude-orchestrator/assets/main-cartoon.png">
   <meta property="og:url" content="https://joshephan.github.io/claude-orchestrator/">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Claude Orchestrator - Multi-Agent Development Automation">
-  <meta name="twitter:description" content="Stop developing. Let Claude Code handle everything.">
+  <meta name="twitter:title" content="Claude Orchestrator - 4-Agent Development Automation">
+  <meta name="twitter:description" content="Stop developing. Let Claude Code handle everything with 4-agent AI collaboration.">
   <meta name="twitter:image" content="https://joshephan.github.io/claude-orchestrator/assets/main-cartoon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=1.0.14">
+  <link rel="stylesheet" href="css/style.css?v=1.0.15">
   <link rel="icon" href="assets/claude-orchestrator.png" type="image/png">
 </head>
 
@@ -64,7 +64,7 @@
     <div class="hero-content">
       <div class="hero-badge">NOT OFFICIAL CLAUDE CODE TOOL</div>
       <h1>Claude Orchestrator</h1>
-      <p class="hero-subtitle">Automate your development workflow with multi-agent AI collaboration</p>
+      <p class="hero-subtitle">Automate your development workflow with 4-agent AI collaboration</p>
       <div class="hero-actions">
         <a href="#installation" class="btn btn-primary">Get Started</a>
         <a href="#workflow" class="btn btn-secondary">Learn More</a>
@@ -91,8 +91,13 @@
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon">&#129302;</div>
-          <h3>Multi-Agent System</h3>
-          <p>Team Lead analyzes tasks, Developer implements them. Automated collaboration between AI agents.</p>
+          <h3>4-Agent Pipeline</h3>
+          <p>Planner defines features, Designer creates tokens, Tech Lead writes guides, Developer implements. Full AI team collaboration.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#127912;</div>
+          <h3>Design Token Verification</h3>
+          <p>Automatically compare design specifications with implementation. Ensure visual consistency across your project.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">&#128202;</div>
@@ -103,11 +108,6 @@
           <div class="feature-icon">&#128260;</div>
           <h3>Checkpoint Recovery</h3>
           <p>Stop and resume workflows anytime. Your progress is always saved.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">&#128200;</div>
-          <h3>Real-time Monitoring</h3>
-          <p>Watch progress in real-time with detailed logs and status updates.</p>
         </div>
       </div>
     </div>
@@ -197,7 +197,7 @@ claude-orchestrator init</code></pre>
           <div class="step-number">3</div>
           <div class="step-content">
             <h3>Monitor Progress</h3>
-            <p>Watch the agents work and monitor the progress in real-time.</p>
+            <p>Watch the 4 agents work and monitor the progress in real-time.</p>
             <div class="code-block">
               <pre><code># View current status
 claude-orchestrator status
@@ -260,7 +260,7 @@ claude-orchestrator logs --follow</code></pre>
           <div class="command-options">
             <h4>Displays</h4>
             <ul>
-              <li>Active agents and their status</li>
+              <li>All 4 agents and their status</li>
               <li>Current task being processed</li>
               <li>Queue statistics</li>
               <li>Recent activity</li>
@@ -358,17 +358,19 @@ claude-orchestrator logs --follow</code></pre>
   <!-- Workflow Section -->
   <section class="section section-alt" id="workflow">
     <div class="container">
-      <h2>How It Works</h2>
+      <h2>How It Works: 4-Agent Pipeline</h2>
 
       <div class="workflow-intro">
-        <img src="assets/bot-talk-each-other.png" alt="Team Lead and Developer agents collaborating"
+        <img src="assets/bot-talk-each-other.png" alt="4 AI agents collaborating"
           class="workflow-image">
         <div class="workflow-description">
-          <p>Claude Orchestrator coordinates two AI agents - a <strong>Team Lead</strong> and a
-            <strong>Developer</strong> - to automate your software development workflow.
-          </p>
-          <p>The Team Lead analyzes tasks and creates detailed implementation instructions, while the Developer executes
-            them with precision.</p>
+          <p>Claude Orchestrator coordinates <strong>4 specialized AI agents</strong> to automate your entire development workflow:</p>
+          <ul>
+            <li><strong>Planner</strong> - Defines product vision and features</li>
+            <li><strong>Designer</strong> - Creates design tokens and specifications</li>
+            <li><strong>Tech Lead</strong> - Writes implementation guides</li>
+            <li><strong>Developer</strong> - Implements the actual code</li>
+          </ul>
         </div>
       </div>
 
@@ -376,11 +378,11 @@ claude-orchestrator logs --follow</code></pre>
         <div class="workflow-step">
           <div class="workflow-step-header">
             <span class="workflow-step-number">1</span>
-            <h3>Discovery (Optional)</h3>
+            <h3>Discovery</h3>
           </div>
           <ul>
             <li>Scan project structure</li>
-            <li>Identify missing features</li>
+            <li>Identify tasks to implement</li>
             <li>Create tasks in queue</li>
           </ul>
         </div>
@@ -390,12 +392,13 @@ claude-orchestrator logs --follow</code></pre>
         <div class="workflow-step">
           <div class="workflow-step-header">
             <span class="workflow-step-number">2</span>
-            <h3>Team Lead Analysis</h3>
+            <h3>Planner</h3>
           </div>
           <ul>
-            <li>Analyze task requirements</li>
-            <li>Study reference code</li>
-            <li>Write implementation guide</li>
+            <li>Define product vision</li>
+            <li>Break down features</li>
+            <li>Design user flows</li>
+            <li>Document requirements</li>
           </ul>
         </div>
 
@@ -404,13 +407,13 @@ claude-orchestrator logs --follow</code></pre>
         <div class="workflow-step">
           <div class="workflow-step-header">
             <span class="workflow-step-number">3</span>
-            <h3>Developer Implementation</h3>
+            <h3>Designer</h3>
           </div>
           <ul>
-            <li>Read instructions</li>
-            <li>Implement features</li>
-            <li>Run verification</li>
-            <li>Submit completion report</li>
+            <li>Create design tokens</li>
+            <li>Define colors, typography, spacing</li>
+            <li>Specify component styles</li>
+            <li>(Optional) Sync with Figma</li>
           </ul>
         </div>
 
@@ -419,12 +422,43 @@ claude-orchestrator logs --follow</code></pre>
         <div class="workflow-step">
           <div class="workflow-step-header">
             <span class="workflow-step-number">4</span>
-            <h3>Review</h3>
+            <h3>Tech Lead</h3>
           </div>
           <ul>
-            <li>Verify implementation</li>
-            <li>Check build status</li>
-            <li>Log completion/rejection</li>
+            <li>Analyze planning docs</li>
+            <li>Review design specs</li>
+            <li>Write implementation guide</li>
+            <li>Define architecture</li>
+          </ul>
+        </div>
+
+        <div class="workflow-arrow">&#8595;</div>
+
+        <div class="workflow-step">
+          <div class="workflow-step-header">
+            <span class="workflow-step-number">5</span>
+            <h3>Developer</h3>
+          </div>
+          <ul>
+            <li>Read instructions</li>
+            <li>Implement features</li>
+            <li>Apply design tokens</li>
+            <li>Run build verification</li>
+          </ul>
+        </div>
+
+        <div class="workflow-arrow">&#8595;</div>
+
+        <div class="workflow-step">
+          <div class="workflow-step-header">
+            <span class="workflow-step-number">6</span>
+            <h3>Review & Verification</h3>
+          </div>
+          <ul>
+            <li>Tech Lead reviews code</li>
+            <li>Compare design tokens with CSS</li>
+            <li>Report discrepancies</li>
+            <li>Log completion</li>
           </ul>
         </div>
       </div>
@@ -460,14 +494,18 @@ claude-orchestrator logs --follow</code></pre>
 
       <div class="directory-structure">
         <pre><code>.claude-orchestrator/
-├── config.json        # Project configuration
-├── status.json        # Current agent status
-├── queue.json         # Task queue
-├── messages/          # Inter-agent communication
-│   ├── to-developer.json
-│   └── to-team-lead.json
+├── config.json           # Project configuration
+├── status.json           # Current agent status (4 agents)
+├── queue.json            # Task queue
+├── messages/             # Inter-agent communication
+│   ├── to-designer.json  # Planner → Designer
+│   ├── to-tech-lead.json # Designer → Tech Lead
+│   └── to-developer.json # Tech Lead → Developer
+├── design/               # Design artifacts
+│   ├── tokens.json       # Design tokens
+│   └── verification-report.json
 └── logs/
-    └── log.md         # Development log</code></pre>
+    └── log.md            # Development log</code></pre>
       </div>
 
       <div class="config-example">
@@ -482,7 +520,12 @@ claude-orchestrator logs --follow</code></pre>
   "goals": ["goal1", "goal2"],
   "platform": "web",
   "maxTasks": 10,
-  "continuous": false
+  "continuous": false,
+  "figma": {
+    "enabled": false,
+    "fileKey": "optional-figma-file-key",
+    "accessToken": "optional-figma-access-token"
+  }
 }</code></pre>
         </div>
       </div>
@@ -532,6 +575,11 @@ claude-orchestrator logs --follow</code></pre>
               <td><code>continuous</code></td>
               <td>boolean</td>
               <td>Enable continuous discovery mode</td>
+            </tr>
+            <tr>
+              <td><code>figma.enabled</code></td>
+              <td>boolean</td>
+              <td>Enable Figma integration (optional)</td>
             </tr>
           </tbody>
         </table>
