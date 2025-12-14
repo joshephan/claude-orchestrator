@@ -195,11 +195,27 @@ export function showStatus(status: StatusFile, actuallyRunning?: boolean): void 
 
   console.log();
 
-  // Team Lead status
-  const leadStatus = status.teamLead.status;
+  // Planner status
+  const plannerStatus = status.planner.status;
+  const plannerColor = plannerStatus === 'idle' ? colors.muted : colors.highlight;
+  console.log(`  ${symbols.pointer} Planner: ${plannerColor(plannerStatus)}`);
+  console.log(colors.muted(`      Last activity: ${formatTime(status.planner.lastActivity)}`));
+
+  console.log();
+
+  // Designer status
+  const designerStatus = status.designer.status;
+  const designerColor = designerStatus === 'idle' ? colors.muted : colors.highlight;
+  console.log(`  ${symbols.pointer} Designer: ${designerColor(designerStatus)}`);
+  console.log(colors.muted(`      Last activity: ${formatTime(status.designer.lastActivity)}`));
+
+  console.log();
+
+  // Tech Lead status
+  const leadStatus = status.techLead.status;
   const leadColor = leadStatus === 'idle' ? colors.muted : colors.highlight;
-  console.log(`  ${symbols.pointer} Team Lead: ${leadColor(leadStatus)}`);
-  console.log(colors.muted(`      Last activity: ${formatTime(status.teamLead.lastActivity)}`));
+  console.log(`  ${symbols.pointer} Tech Lead: ${leadColor(leadStatus)}`);
+  console.log(colors.muted(`      Last activity: ${formatTime(status.techLead.lastActivity)}`));
 
   console.log();
 

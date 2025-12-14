@@ -19,6 +19,18 @@ export interface ProjectInfo {
 }
 
 /**
+ * Figma integration configuration
+ */
+export interface FigmaConfig {
+  /** Whether Figma integration is enabled */
+  enabled: boolean;
+  /** Figma file key */
+  fileKey?: string;
+  /** Figma access token */
+  accessToken?: string;
+}
+
+/**
  * Main configuration stored in .claude-orchestrator/config.json
  */
 export interface OrchestratorConfig {
@@ -36,6 +48,8 @@ export interface OrchestratorConfig {
   continuous: boolean;
   /** Timestamp when initialized */
   initialized: string;
+  /** Figma integration configuration (optional) */
+  figma?: FigmaConfig;
 }
 
 /**
@@ -139,13 +153,47 @@ export interface TaskQueue {
  */
 export type AgentStatus =
   | 'idle'
+  | 'planning'
+  | 'designing'
   | 'analyzing'
   | 'assigning'
   | 'implementing'
-  | 'reviewing';
+  | 'reviewing'
+  | 'verifying';
+
+/**
+ * Planner agent status
+ */
+export interface PlannerStatus {
+  /** Current status */
+  status: AgentStatus;
+  /** ISO timestamp of last activity */
+  lastActivity: string;
+}
+
+/**
+ * Designer agent status
+ */
+export interface DesignerStatus {
+  /** Current status */
+  status: AgentStatus;
+  /** ISO timestamp of last activity */
+  lastActivity: string;
+}
+
+/**
+ * Tech Lead agent status (formerly Team Lead)
+ */
+export interface TechLeadStatus {
+  /** Current status */
+  status: AgentStatus;
+  /** ISO timestamp of last activity */
+  lastActivity: string;
+}
 
 /**
  * Team lead agent status
+ * @deprecated Use TechLeadStatus instead
  */
 export interface TeamLeadStatus {
   /** Current status */
@@ -198,8 +246,12 @@ export interface CycleStats {
 export interface StatusFile {
   /** Orchestrator process status */
   orchestrator: OrchestratorStatus;
-  /** Team lead agent status */
-  teamLead: TeamLeadStatus;
+  /** Planner agent status */
+  planner: PlannerStatus;
+  /** Designer agent status */
+  designer: DesignerStatus;
+  /** Tech Lead agent status */
+  techLead: TechLeadStatus;
   /** Developer agent status */
   developer: DeveloperStatus;
   /** Statistics from last cycle */
@@ -217,7 +269,10 @@ export type MessageType =
   | 'task_assignment'
   | 'completion_report'
   | 'review_result'
-  | 'discovery_result';
+  | 'discovery_result'
+  | 'planning_document'
+  | 'design_specification'
+  | 'design_verification';
 
 /**
  * Base message structure
@@ -286,9 +341,164 @@ export interface CompletionReportMessage extends BaseMessage {
  */
 export interface MessageFile {
   /** List of messages */
-  messages: (TaskAssignmentMessage | CompletionReportMessage)[];
+  messages: (TaskAssignmentMessage | CompletionReportMessage | PlanningDocumentMessage | DesignSpecificationMessage | DesignVerificationMessage)[];
   /** ISO timestamp when last read */
   lastRead: string | null;
+}
+
+// ============================================================================
+// Planning Types (Planner Agent)
+// ============================================================================
+
+/**
+ * Feature definition in planning document
+ */
+export interface FeatureDefinition {
+  /** Feature name */
+  name: string;
+  /** Feature description */
+  description: string;
+  /** Priority level */
+  priority: TaskPriority;
+  /** Acceptance criteria */
+  acceptanceCriteria?: string[];
+}
+
+/**
+ * User flow step
+ */
+export interface UserFlowStep {
+  /** Step number */
+  step: number;
+  /** Action description */
+  action: string;
+  /** Expected result */
+  expectedResult: string;
+}
+
+/**
+ * User flow definition
+ */
+export interface UserFlow {
+  /** Flow name */
+  name: string;
+  /** Flow description */
+  description: string;
+  /** Flow steps */
+  steps: UserFlowStep[];
+}
+
+/**
+ * Planning document message from Planner to Designer
+ */
+export interface PlanningDocumentMessage extends BaseMessage {
+  type: 'planning_document';
+  /** Product vision statement */
+  productVision: string;
+  /** Core features list */
+  coreFeatures: FeatureDefinition[];
+  /** User flows */
+  userFlows: UserFlow[];
+  /** Technical requirements */
+  requirements: string[];
+}
+
+// ============================================================================
+// Design Types (Designer Agent)
+// ============================================================================
+
+/**
+ * Font token definition
+ */
+export interface FontToken {
+  /** Font family name */
+  family: string;
+  /** Font size (e.g., "16px") */
+  size: string;
+  /** Font weight (e.g., "400", "bold") */
+  weight: string;
+  /** Line height (e.g., "1.5", "24px") */
+  lineHeight?: string;
+  /** Letter spacing */
+  letterSpacing?: string;
+}
+
+/**
+ * Design tokens extracted from Figma or defined by designer
+ */
+export interface DesignTokens {
+  /** Color tokens (name -> hex/rgb value) */
+  colors: Record<string, string>;
+  /** Font tokens */
+  fonts: Record<string, FontToken>;
+  /** Spacing tokens (name -> px value) */
+  spacing: Record<string, string>;
+  /** Border radius tokens */
+  borderRadius?: Record<string, string>;
+  /** Shadow tokens */
+  shadows?: Record<string, string>;
+}
+
+/**
+ * Component specification
+ */
+export interface ComponentSpec {
+  /** Component name */
+  name: string;
+  /** Component description */
+  description: string;
+  /** Design tokens used by this component */
+  usedTokens: string[];
+  /** Figma node reference (optional) */
+  figmaNodeId?: string;
+}
+
+/**
+ * Design specification message from Designer to Tech Lead
+ */
+export interface DesignSpecificationMessage extends BaseMessage {
+  type: 'design_specification';
+  /** Design tokens */
+  designTokens: DesignTokens;
+  /** Component specifications */
+  componentSpecs: ComponentSpec[];
+  /** Figma file reference URL (optional) */
+  figmaReference?: string;
+}
+
+/**
+ * Design discrepancy item
+ */
+export interface DiscrepancyItem {
+  /** Token type (color, font, spacing, etc.) */
+  type: 'color' | 'font' | 'spacing' | 'borderRadius' | 'shadow' | 'other';
+  /** Token name */
+  tokenName: string;
+  /** Expected value from design */
+  expectedValue: string;
+  /** Actual value from implementation */
+  actualValue: string;
+  /** Difference description */
+  difference: string;
+  /** Severity level */
+  severity: 'error' | 'warning' | 'info';
+}
+
+/**
+ * Design verification message (result of comparing design vs implementation)
+ */
+export interface DesignVerificationMessage extends BaseMessage {
+  type: 'design_verification';
+  /** Whether design matches implementation */
+  verified: boolean;
+  /** Match percentage (0-100) */
+  matchPercentage: number;
+  /** Total tokens checked */
+  totalChecked: number;
+  /** List of discrepancies found */
+  discrepancies: DiscrepancyItem[];
+  /** Summary report */
+  summary: string;
 }
 
 // ============================================================================

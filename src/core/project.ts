@@ -73,20 +73,29 @@ function createDefaultQueue(): TaskQueue {
  * @returns Default status
  */
 function createDefaultStatus(): StatusFile {
+  const now = new Date().toISOString();
   return {
     orchestrator: {
       running: false,
       pid: null,
       startedAt: null,
     },
-    teamLead: {
+    planner: {
       status: 'idle',
-      lastActivity: new Date().toISOString(),
+      lastActivity: now,
+    },
+    designer: {
+      status: 'idle',
+      lastActivity: now,
+    },
+    techLead: {
+      status: 'idle',
+      lastActivity: now,
     },
     developer: {
       status: 'idle',
       currentTask: null,
-      lastActivity: new Date().toISOString(),
+      lastActivity: now,
     },
     lastCycle: null,
   };
@@ -144,7 +153,12 @@ export async function initProject(projectPath: string): Promise<OrchestratorConf
   await writeJSON(getFilePath(absolutePath, 'config'), config);
   await writeJSON(getFilePath(absolutePath, 'queue'), queue);
   await writeJSON(getFilePath(absolutePath, 'status'), status);
+
+  // Message files for 4-agent pipeline
+  await writeJSON(getFilePath(absolutePath, 'toDesigner'), messageFile);
+  await writeJSON(getFilePath(absolutePath, 'toTechLead'), messageFile);
   await writeJSON(getFilePath(absolutePath, 'toDeveloper'), messageFile);
+  // Legacy: keep toTeamLead for backward compatibility
   await writeJSON(getFilePath(absolutePath, 'toTeamLead'), messageFile);
 
   // Create empty log file
@@ -285,23 +299,40 @@ export async function updateOrchestratorStatus(
  */
 export async function updateAgentStatus(
   projectPath: string,
-  agent: 'teamLead' | 'developer',
+  agent: 'planner' | 'designer' | 'techLead' | 'developer' | 'teamLead',
   agentStatus: string,
   currentTask?: string | null
 ): Promise<void> {
   const status = await loadStatus(projectPath);
+  const now = new Date().toISOString();
 
-  if (agent === 'teamLead') {
-    status.teamLead = {
-      status: agentStatus as StatusFile['teamLead']['status'],
-      lastActivity: new Date().toISOString(),
-    };
-  } else {
-    status.developer = {
-      status: agentStatus as StatusFile['developer']['status'],
-      currentTask: currentTask ?? status.developer.currentTask,
-      lastActivity: new Date().toISOString(),
-    };
+  switch (agent) {
+    case 'planner':
+      status.planner = {
+        status: agentStatus as StatusFile['planner']['status'],
+        lastActivity: now,
+      };
+      break;
+    case 'designer':
+      status.designer = {
+        status: agentStatus as StatusFile['designer']['status'],
+        lastActivity: now,
+      };
+      break;
+    case 'techLead':
+    case 'teamLead': // Legacy support
+      status.techLead = {
+        status: agentStatus as StatusFile['techLead']['status'],
+        lastActivity: now,
+      };
+      break;
+    case 'developer':
+      status.developer = {
+        status: agentStatus as StatusFile['developer']['status'],
+        currentTask: currentTask ?? status.developer.currentTask,
+        lastActivity: now,
+      };
+      break;
   }
 
   await saveStatus(projectPath, status);
@@ -342,7 +373,19 @@ export function getProjectOrchestratorDir(projectPath: string): string {
  */
 export function getProjectFilePath(
   projectPath: string,
-  file: 'config' | 'status' | 'queue' | 'pid' | 'toDeveloper' | 'toTeamLead' | 'log'
+  file:
+    | 'config'
+    | 'status'
+    | 'queue'
+    | 'pid'
+    | 'toDesigner'
+    | 'toTechLead'
+    | 'toDeveloper'
+    | 'toTeamLead'
+    | 'designTokens'
+    | 'cssTokens'
+    | 'verificationReport'
+    | 'log'
 ): string {
   const absolutePath = resolvePath(projectPath);
   return getFilePath(absolutePath, file);

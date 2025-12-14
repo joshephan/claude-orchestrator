@@ -162,7 +162,12 @@ export {
   loadConfig,
   updateConfig,
   loadStatus,
+  saveStatus,
   checkInitialized,
+  updateOrchestratorStatus,
+  updateAgentStatus,
+  getProjectOrchestratorDir,
+  getProjectFilePath,
 } from './core/project.js';
 
 export {
@@ -176,9 +181,14 @@ export {
 
 export {
   processTask,
+  processTaskV2,
   runTeamLead,
   runDeveloper,
   runReview,
+  runPlanner,
+  runDesigner,
+  runTechLead,
+  runDesignVerification,
 } from './core/agent.js';
 
 // Re-export utilities
@@ -211,9 +221,16 @@ export {
 } from './cli/prompts.js';
 
 // Re-export agent builders
+export * from './agents/planner.js';
+export * from './agents/designer.js';
 export * from './agents/team-lead.js';
 export * from './agents/developer.js';
 export * from './agents/discovery.js';
+
+// Re-export design utilities
+export * from './utils/figma.js';
+export * from './utils/css-extractor.js';
+export * from './utils/design-comparator.js';
 
 // Re-export config
 export * from './config/defaults.js';

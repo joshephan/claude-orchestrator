@@ -1,13 +1,23 @@
 /**
- * Team Lead agent prompt builder module
+ * Tech Lead agent prompt builder module
  *
- * Constructs prompts for the Team Lead agent role,
- * which analyzes tasks and creates implementation instructions.
+ * Constructs prompts for the Tech Lead agent role,
+ * which designs development tasks and creates implementation instructions.
+ *
+ * Note: This module was formerly named Team Lead. The core functionality
+ * remains similar but now integrates with Planner and Designer agents.
  */
 
 import path from 'path';
 import { readTextSafe } from '../utils/files.js';
-import type { Task, OrchestratorConfig, TaskAssignmentMessage, CompletionReportMessage } from '../types.js';
+import type {
+  Task,
+  OrchestratorConfig,
+  TaskAssignmentMessage,
+  CompletionReportMessage,
+  PlanningDocumentMessage,
+  DesignSpecificationMessage,
+} from '../types.js';
 
 // ============================================================================
 // Template Loading
@@ -30,9 +40,18 @@ export async function loadTeamLeadTemplate(templatePath: string): Promise<string
  * @returns Default template content
  */
 function getDefaultTeamLeadTemplate(): string {
-  return `# Team Lead Role
+  return getDefaultTechLeadTemplate();
+}
 
-You are a Team Lead responsible for analyzing development tasks and creating
+/**
+ * Get the default tech lead template
+ *
+ * @returns Default template content
+ */
+function getDefaultTechLeadTemplate(): string {
+  return `# Tech Lead Role
+
+You are a Tech Lead responsible for designing development tasks and creating
 clear, actionable implementation instructions for developers.
 
 ## Responsibilities
@@ -307,4 +326,160 @@ export function getPlatformGuidelines(platform: string): string {
 - Implement proper error handling
 - Write testable code`;
   }
+}
+
+// ============================================================================
+// Tech Lead Extended Functions
+// ============================================================================
+
+/**
+ * Load the tech lead role template
+ *
+ * @param templatePath - Path to the template file
+ * @returns Template content or default
+ */
+export async function loadTechLeadTemplate(templatePath: string): Promise<string> {
+  const content = await readTextSafe(templatePath);
+  return content || getDefaultTechLeadTemplate();
+}
+
+/**
+ * Build prompt for tech lead with planning and design context
+ *
+ * This is the primary function for the 4-agent pipeline, which receives
+ * input from both the Planner and Designer agents.
+ *
+ * @param task - Task to assign
+ * @param planningDoc - Planning document from Planner
+ * @param designSpec - Design specification from Designer
+ * @param config - Project configuration
+ * @param template - Optional custom template
+ * @returns Complete prompt string
+ */
+export function buildTechLeadPrompt(
+  task: Task,
+  planningDoc: PlanningDocumentMessage,
+  designSpec: DesignSpecificationMessage,
+  config: OrchestratorConfig,
+  template?: string
+): string {
+  const roleTemplate = template || getDefaultTechLeadTemplate();
+  const projectPath = config.project.path;
+  const messageFilePath = path.join(
+    projectPath,
+    '.claude-orchestrator',
+    'messages',
+    'to-developer.json'
+  );
+
+  return `${roleTemplate}
+
+---
+
+## Current Assignment
+
+### Task Details
+- **ID**: ${task.id}
+- **Title**: ${task.title}
+- **Type**: ${task.type}
+- **Priority**: ${task.priority}
+- **Description**: ${task.description}
+
+### Project Context
+- **Project Name**: ${config.project.name}
+- **Platform**: ${config.platform}
+- **Development Scope**: ${config.scope}
+- **Goals**: ${config.goals.join(', ')}
+
+---
+
+## Input from Planner
+
+**Product Vision**: ${planningDoc.productVision}
+
+**Core Features**:
+${planningDoc.coreFeatures.map((f) => `- **${f.name}** (${f.priority}): ${f.description}
+  ${f.acceptanceCriteria ? `  - Criteria: ${f.acceptanceCriteria.join(', ')}` : ''}`).join('\n')}
+
+**User Flows**:
+${planningDoc.userFlows.map((flow) => `- **${flow.name}**: ${flow.description}`).join('\n')}
+
+**Technical Requirements**:
+${planningDoc.requirements.map((r) => `- ${r}`).join('\n')}
+
+---
+
+## Input from Designer
+
+### Design Tokens
+
+**Colors**:
+${Object.entries(designSpec.designTokens.colors)
+  .map(([name, value]) => `- ${name}: ${value}`)
+  .join('\n')}
+
+**Fonts**:
+${Object.entries(designSpec.designTokens.fonts)
+  .map(([name, token]) => `- ${name}: ${token.family} ${token.size} ${token.weight}`)
+  .join('\n')}
+
+**Spacing**:
+${Object.entries(designSpec.designTokens.spacing)
+  .map(([name, value]) => `- ${name}: ${value}`)
+  .join('\n')}
+
+${designSpec.designTokens.borderRadius ? `**Border Radius**:
+${Object.entries(designSpec.designTokens.borderRadius)
+  .map(([name, value]) => `- ${name}: ${value}`)
+  .join('\n')}` : ''}
+
+**Component Specs**:
+${designSpec.componentSpecs.map((c) => `- **${c.name}**: ${c.description} (uses: ${c.usedTokens.join(', ')})`).join('\n')}
+
+${designSpec.figmaReference ? `**Figma Reference**: ${designSpec.figmaReference}` : ''}
+
+---
+
+## Your Task
+
+1. Analyze all inputs from Planner and Designer
+2. Design the technical implementation approach
+3. Break down into concrete development tasks
+4. Write detailed instructions that include design token references
+
+## Required Output
+
+You MUST write your instructions to the following file:
+\`${messageFilePath}\`
+
+The JSON format should be:
+\`\`\`json
+{
+  "messages": [{
+    "type": "task_assignment",
+    "taskId": "${task.id}",
+    "platform": "${config.platform}",
+    "title": "${task.title}",
+    "instructions": "Your detailed implementation instructions here...",
+    "filesToCreate": ["list", "of", "files", "to", "create"],
+    "architecture": "Architecture pattern to follow",
+    "apiEndpoints": ["API endpoints if applicable"],
+    "timestamp": "${new Date().toISOString()}"
+  }],
+  "lastRead": null
+}
+\`\`\`
+
+## Instructions Should Include
+
+1. Overview of the implementation
+2. File structure and component hierarchy
+3. **Design token usage** - Reference the exact tokens from the design spec
+4. Step-by-step implementation guide
+5. Integration with existing code
+6. Testing requirements
+
+${getPlatformGuidelines(config.platform)}
+
+Begin your analysis and write the instructions now.`;
 }

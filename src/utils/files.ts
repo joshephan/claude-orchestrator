@@ -21,8 +21,16 @@ export const FILES = {
   status: 'status.json',
   queue: 'queue.json',
   pid: 'orchestrator.pid',
+  // Message files for inter-agent communication
+  toDesigner: 'messages/to-designer.json',
+  toTechLead: 'messages/to-tech-lead.json',
   toDeveloper: 'messages/to-developer.json',
-  toTeamLead: 'messages/to-team-lead.json',
+  toTeamLead: 'messages/to-team-lead.json', // deprecated: use toTechLead
+  // Design-related files
+  designTokens: 'design/tokens.json',
+  cssTokens: 'design/css-tokens.json',
+  verificationReport: 'design/verification-report.json',
+  // Logs
   log: 'logs/log.md',
 } as const;
 
@@ -147,6 +155,7 @@ export async function initDirectoryStructure(projectPath: string): Promise<void>
 
   // Create directory structure
   await fs.ensureDir(path.join(orchestratorDir, 'messages'));
+  await fs.ensureDir(path.join(orchestratorDir, 'design'));
   await fs.ensureDir(path.join(orchestratorDir, 'logs'));
 }
 

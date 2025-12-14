@@ -3,7 +3,12 @@
     "allow": [
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
-      "Bash(npm publish:*)"
+      "Bash(npm publish:*)",
+      "WebSearch",
+      "Bash(tree:*)",
+      "Bash(ls -la \"C:\\Users\\user\\Documents\\projects\\claude-orchestrator\\src\\core\"\" 2>/dev/null || echo \"Directory not found \")",
+      "Bash(node dist/index.js:*)",
+      "Bash(node -e \"\nimport { createProgram } from ''../dist/index.js'';\nconst program = createProgram();\nprogram.parse([''node'', ''test'', ''status'']);\n\")"
     ]
   }
 }

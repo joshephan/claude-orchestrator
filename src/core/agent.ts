@@ -1,8 +1,8 @@
 /**
  * Agent management module
  *
- * Handles spawning and coordinating Claude agents for
- * team lead and developer roles.
+ * Handles spawning and coordinating Claude agents for the 4-agent pipeline:
+ * Planner -> Designer -> Tech Lead -> Developer
  */
 
 import path from 'path';
@@ -11,20 +11,42 @@ import { getFilePath, readJSON, writeJSON, resolvePath } from '../utils/files.js
 import { logger } from '../utils/logger.js';
 import { updateAgentStatus, loadStatus, saveStatus } from './project.js';
 import { updateTaskStatus, setCurrentTask, completeTask, rejectTask } from './queue.js';
+
+// Agent prompt builders
+import { buildPlanningPrompt } from '../agents/planner.js';
+import { buildDesignPrompt } from '../agents/designer.js';
+import { buildTechLeadPrompt } from '../agents/team-lead.js';
+
+// Design utilities
+import { extractCSSTokens } from '../utils/css-extractor.js';
+import { compareDesignTokens, createVerificationMessage } from '../utils/design-comparator.js';
+
 import type {
   Task,
   OrchestratorConfig,
   MessageFile,
   TaskAssignmentMessage,
   CompletionReportMessage,
+  PlanningDocumentMessage,
+  DesignSpecificationMessage,
   AgentResult,
+  DiscrepancyItem,
 } from '../types.js';
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-/** Default timeout for team lead (5 minutes) */
+/** Default timeout for planner (5 minutes) */
+const PLANNER_TIMEOUT = 5 * 60 * 1000;
+
+/** Default timeout for designer (5 minutes) */
+const DESIGNER_TIMEOUT = 5 * 60 * 1000;
+
+/** Default timeout for tech lead (5 minutes) */
+const TECH_LEAD_TIMEOUT = 5 * 60 * 1000;
+
+/** Default timeout for team lead - legacy alias (5 minutes) */
 const TEAM_LEAD_TIMEOUT = 5 * 60 * 1000;
 
 /** Default timeout for developer (15 minutes) */
@@ -37,6 +59,8 @@ const REVIEW_TIMEOUT = 3 * 60 * 1000;
 // Message File Operations
 // ============================================================================
 
+type MessageTarget = 'toDesigner' | 'toTechLead' | 'toDeveloper' | 'toTeamLead';
+
 /**
  * Clear messages for an agent
  *
@@ -45,7 +69,7 @@ const REVIEW_TIMEOUT = 3 * 60 * 1000;
  */
 async function clearMessages(
   projectPath: string,
-  target: 'toDeveloper' | 'toTeamLead'
+  target: MessageTarget
 ): Promise<void> {
   const absolutePath = resolvePath(projectPath);
   const messageFile: MessageFile = {
@@ -64,7 +88,7 @@ async function clearMessages(
  */
 async function readMessages(
   projectPath: string,
-  target: 'toDeveloper' | 'toTeamLead'
+  target: MessageTarget
 ): Promise<MessageFile> {
   const absolutePath = resolvePath(projectPath);
   return readJSON<MessageFile>(getFilePath(absolutePath, target));
@@ -630,7 +654,7 @@ Start by reading the queue file, then write the updated queue with your new task
     skipPermissions,
   });
 
-  await updateAgentStatus(projectPath, 'teamLead', 'idle');
+  await updateAgentStatus(projectPath, 'techLead', 'idle');
 
   if (result.success) {
     logger.info('Discovery agent completed');
@@ -639,4 +663,393 @@ Start by reading the queue file, then write the updated queue with your new task
   }
 
   return result;
+}
+
+// ============================================================================
+// 4-Agent Pipeline: New Agent Functions
+// ============================================================================
+
+/**
+ * Run the planner agent to create a planning document
+ *
+ * @param projectPath - Path to the project
+ * @param task - Task to plan
+ * @param config - Project configuration
+ * @param skipPermissions - Whether to skip permission prompts
+ * @returns Agent result
+ */
+export async function runPlanner(
+  projectPath: string,
+  task: Task,
+  config: OrchestratorConfig,
+  skipPermissions = false
+): Promise<AgentResult> {
+  const absolutePath = resolvePath(projectPath);
+
+  logger.info(`Planner analyzing task: ${task.id} - ${task.title}`);
+  await updateAgentStatus(projectPath, 'planner', 'planning');
+
+  // Clear previous messages
+  await clearMessages(projectPath, 'toDesigner');
+
+  // Build and run prompt
+  const prompt = buildPlanningPrompt(task, config);
+  const result = await runClaudeAgent('planner', prompt, {
+    cwd: absolutePath,
+    timeout: PLANNER_TIMEOUT,
+    skipPermissions,
+  });
+
+  await updateAgentStatus(projectPath, 'planner', 'idle');
+
+  if (result.success) {
+    logger.info(`Planner completed planning for ${task.id}`);
+  } else {
+    logger.error(`Planner failed for task ${task.id}: ${result.error}`);
+  }
+
+  return result;
+}
+
+/**
+ * Run the designer agent to create design specifications
+ *
+ * @param projectPath - Path to the project
+ * @param task - Task to design
+ * @param planningDoc - Planning document from planner
+ * @param config - Project configuration
+ * @param skipPermissions - Whether to skip permission prompts
+ * @returns Agent result
+ */
+export async function runDesigner(
+  projectPath: string,
+  task: Task,
+  planningDoc: PlanningDocumentMessage,
+  config: OrchestratorConfig,
+  skipPermissions = false
+): Promise<AgentResult> {
+  const absolutePath = resolvePath(projectPath);
+
+  logger.info(`Designer creating design spec for task: ${task.id}`);
+  await updateAgentStatus(projectPath, 'designer', 'designing');
+
+  // Clear previous messages
+  await clearMessages(projectPath, 'toTechLead');
+
+  // Build and run prompt
+  const prompt = buildDesignPrompt(task, planningDoc, config);
+  const result = await runClaudeAgent('designer', prompt, {
+    cwd: absolutePath,
+    timeout: DESIGNER_TIMEOUT,
+    skipPermissions,
+  });
+
+  await updateAgentStatus(projectPath, 'designer', 'idle');
+
+  if (result.success) {
+    logger.info(`Designer completed design spec for ${task.id}`);
+  } else {
+    logger.error(`Designer failed for task ${task.id}: ${result.error}`);
+  }
+
+  return result;
+}
+
+/**
+ * Run the tech lead agent to create development instructions
+ *
+ * @param projectPath - Path to the project
+ * @param task - Task to assign
+ * @param planningDoc - Planning document from planner
+ * @param designSpec - Design specification from designer
+ * @param config - Project configuration
+ * @param skipPermissions - Whether to skip permission prompts
+ * @returns Agent result
+ */
+export async function runTechLead(
+  projectPath: string,
+  task: Task,
+  planningDoc: PlanningDocumentMessage,
+  designSpec: DesignSpecificationMessage,
+  config: OrchestratorConfig,
+  skipPermissions = false
+): Promise<AgentResult> {
+  const absolutePath = resolvePath(projectPath);
+
+  logger.info(`Tech Lead creating instructions for task: ${task.id}`);
+  await updateAgentStatus(projectPath, 'techLead', 'assigning');
+
+  // Clear previous messages
+  await clearMessages(projectPath, 'toDeveloper');
+
+  // Build and run prompt
+  const prompt = buildTechLeadPrompt(task, planningDoc, designSpec, config);
+  const result = await runClaudeAgent('tech-lead', prompt, {
+    cwd: absolutePath,
+    timeout: TECH_LEAD_TIMEOUT,
+    skipPermissions,
+  });
+
+  await updateAgentStatus(projectPath, 'techLead', 'idle');
+
+  if (result.success) {
+    logger.info(`Tech Lead completed instructions for ${task.id}`);
+  } else {
+    logger.error(`Tech Lead failed for task ${task.id}: ${result.error}`);
+  }
+
+  return result;
+}
+
+/**
+ * Run design verification to compare implementation with design tokens
+ *
+ * @param projectPath - Path to the project
+ * @param task - Task to verify
+ * @param designSpec - Original design specification
+ * @param config - Project configuration
+ * @returns Verification result with discrepancies
+ */
+export async function runDesignVerification(
+  projectPath: string,
+  task: Task,
+  designSpec: DesignSpecificationMessage,
+  config: OrchestratorConfig
+): Promise<{ verified: boolean; matchPercentage: number; discrepancies: DiscrepancyItem[] }> {
+  const absolutePath = resolvePath(projectPath);
+
+  logger.info(`Running design verification for task: ${task.id}`);
+  await updateAgentStatus(projectPath, 'designer', 'verifying');
+
+  try {
+    // Extract CSS tokens from the implementation
+    const cssTokens = await extractCSSTokens({
+      rootDir: absolutePath,
+      parseTailwind: true,
+    });
+
+    // Compare with design tokens
+    const result = compareDesignTokens(
+      designSpec.designTokens,
+      cssTokens,
+      { minMatchPercentage: 90 }
+    );
+
+    // Log the verification result
+    if (result.verified) {
+      logger.info(`Design verification passed for ${task.id}: ${result.matchPercentage}% match`);
+    } else {
+      logger.warn(`Design verification warning for ${task.id}: ${result.matchPercentage}% match, ${result.discrepancies.length} discrepancies`);
+    }
+
+    // Save verification report
+    const verificationMessage = createVerificationMessage(task.id, config.platform, result);
+    await writeJSON(getFilePath(absolutePath, 'verificationReport'), verificationMessage);
+
+    return {
+      verified: result.verified,
+      matchPercentage: result.matchPercentage,
+      discrepancies: result.discrepancies,
+    };
+  } catch (error) {
+    logger.error(`Design verification error for ${task.id}: ${error}`);
+    return {
+      verified: true, // Don't block on verification errors
+      matchPercentage: 0,
+      discrepancies: [],
+    };
+  } finally {
+    await updateAgentStatus(projectPath, 'designer', 'idle');
+  }
+}
+
+// ============================================================================
+// 4-Agent Pipeline: Process Task
+// ============================================================================
+
+/**
+ * Process task result with error details for 4-agent pipeline
+ */
+export interface ProcessTaskResultV2 {
+  success: boolean;
+  error?: string;
+  phase?: 'planner' | 'designer' | 'tech_lead' | 'developer' | 'review' | 'verification';
+  designVerification?: {
+    verified: boolean;
+    matchPercentage: number;
+    discrepancies: DiscrepancyItem[];
+  };
+}
+
+/**
+ * Process a single task through the 4-agent pipeline
+ *
+ * Pipeline: Planner -> Designer -> Tech Lead -> Developer -> Review -> Design Verification
+ *
+ * @param projectPath - Path to the project
+ * @param task - Task to process
+ * @param config - Project configuration
+ * @param skipPermissions - Whether to skip permission prompts
+ * @returns Task result with error details
+ */
+export async function processTaskV2(
+  projectPath: string,
+  task: Task,
+  config: OrchestratorConfig,
+  skipPermissions = false
+): Promise<ProcessTaskResultV2> {
+  logger.info(`Processing task (4-agent pipeline): ${task.id} - ${task.title}`);
+
+  try {
+    // Set as current task
+    await setCurrentTask(projectPath, task.id);
+    await updateTaskStatus(projectPath, task.id, 'in_progress');
+
+    // =========================================================================
+    // Phase 1: Planner
+    // =========================================================================
+    logger.info(`[Phase 1/6] Planner analyzing task ${task.id}`);
+    const plannerResult = await runPlanner(projectPath, task, config, skipPermissions);
+    if (!plannerResult.success) {
+      const error = plannerResult.error || 'Planner failed to create planning document';
+      logger.error(`Planner failed for ${task.id}: ${error}`);
+      return { success: false, error, phase: 'planner' };
+    }
+
+    // Read planning document
+    const plannerMessages = await readMessages(projectPath, 'toDesigner');
+    const planningDoc = plannerMessages.messages.find(
+      (m) => m.type === 'planning_document' && m.taskId === task.id
+    ) as PlanningDocumentMessage | undefined;
+
+    if (!planningDoc) {
+      return { success: false, error: 'Planner did not create planning document', phase: 'planner' };
+    }
+
+    // =========================================================================
+    // Phase 2: Designer
+    // =========================================================================
+    logger.info(`[Phase 2/6] Designer creating design spec for ${task.id}`);
+    const designerResult = await runDesigner(projectPath, task, planningDoc, config, skipPermissions);
+    if (!designerResult.success) {
+      const error = designerResult.error || 'Designer failed to create design specification';
+      logger.error(`Designer failed for ${task.id}: ${error}`);
+      return { success: false, error, phase: 'designer' };
+    }
+
+    // Read design specification
+    const designerMessages = await readMessages(projectPath, 'toTechLead');
+    const designSpec = designerMessages.messages.find(
+      (m) => m.type === 'design_specification' && m.taskId === task.id
+    ) as DesignSpecificationMessage | undefined;
+
+    if (!designSpec) {
+      return { success: false, error: 'Designer did not create design specification', phase: 'designer' };
+    }
+
+    // Save design tokens for later verification
+    await writeJSON(getFilePath(resolvePath(projectPath), 'designTokens'), designSpec.designTokens);
+
+    // =========================================================================
+    // Phase 3: Tech Lead
+    // =========================================================================
+    logger.info(`[Phase 3/6] Tech Lead creating instructions for ${task.id}`);
+    const techLeadResult = await runTechLead(projectPath, task, planningDoc, designSpec, config, skipPermissions);
+    if (!techLeadResult.success) {
+      const error = techLeadResult.error || 'Tech Lead failed to create instructions';
+      logger.error(`Tech Lead failed for ${task.id}: ${error}`);
+      return { success: false, error, phase: 'tech_lead' };
+    }
+
+    // =========================================================================
+    // Phase 4: Developer
+    // =========================================================================
+    logger.info(`[Phase 4/6] Developer implementing ${task.id}`);
+    const developerResult = await runDeveloper(projectPath, task, config, skipPermissions);
+    if (!developerResult.success) {
+      const error = developerResult.error || 'Developer failed to implement task';
+      logger.error(`Developer failed for ${task.id}: ${error}`);
+      return { success: false, error, phase: 'developer' };
+    }
+
+    // Update status to awaiting review
+    await updateTaskStatus(projectPath, task.id, 'awaiting_review');
+
+    // =========================================================================
+    // Phase 5: Tech Lead Review
+    // =========================================================================
+    logger.info(`[Phase 5/6] Tech Lead reviewing ${task.id}`);
+    const reviewResult = await runReview(projectPath, task, config, skipPermissions);
+
+    if (!reviewResult.approved) {
+      await rejectTask(projectPath, task.id, reviewResult.reason || 'Review failed');
+      logger.warn(`Task ${task.id} rejected: ${reviewResult.reason}`);
+
+      await logger.logTaskCompletion(
+        task.id,
+        task.title,
+        config.platform,
+        task.priority,
+        'Implementation rejected',
+        [],
+        [],
+        'failed',
+        'rejected',
+        reviewResult.reason
+      );
+
+      return { success: false, error: reviewResult.reason || 'Review failed', phase: 'review' };
+    }
+
+    // =========================================================================
+    // Phase 6: Design Verification (warning only, does not block)
+    // =========================================================================
+    logger.info(`[Phase 6/6] Running design verification for ${task.id}`);
+    const verificationResult = await runDesignVerification(projectPath, task, designSpec, config);
+
+    // Log verification results but don't fail the task
+    if (!verificationResult.verified) {
+      logger.warn(`Design verification found ${verificationResult.discrepancies.length} discrepancies (${verificationResult.matchPercentage}% match)`);
+    }
+
+    // Complete the task
+    await completeTask(projectPath, task.id);
+    logger.info(`Task ${task.id} completed successfully`);
+
+    // Log to development log
+    const messages = await readMessages(projectPath, 'toTeamLead');
+    const report = messages.messages.find(
+      (m) => m.type === 'completion_report' && m.taskId === task.id
+    ) as CompletionReportMessage | undefined;
+
+    if (report) {
+      await logger.logTaskCompletion(
+        task.id,
+        task.title,
+        config.platform,
+        task.priority,
+        report.summary,
+        report.filesCreated,
+        report.filesModified,
+        report.buildResult.status,
+        'approved'
+      );
+    }
+
+    return {
+      success: true,
+      designVerification: verificationResult,
+    };
+  } catch (error) {
+    logger.error(`Error processing task ${task.id}: ${error}`);
+    return { success: false, error: String(error) };
+  } finally {
+    // Clear current task
+    await setCurrentTask(projectPath, null);
+    // Clear all messages
+    await clearMessages(projectPath, 'toDesigner');
+    await clearMessages(projectPath, 'toTechLead');
+    await clearMessages(projectPath, 'toDeveloper');
+    await clearMessages(projectPath, 'toTeamLead');
+  }
 }
