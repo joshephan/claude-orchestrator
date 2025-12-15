@@ -79,7 +79,7 @@ and ensuring visual consistency between design and implementation.
 /**
  * Build prompt for creating design specification
  *
- * Skills-optimized: Short context prompt that triggers orchestrator-designer skill
+ * Skills-optimized: Compact prompt with essential context and output format
  *
  * @param task - Task to design
  * @param planningDoc - Planning document from planner
@@ -101,31 +101,40 @@ export function buildDesignPrompt(
     'to-tech-lead.json'
   );
 
-  const featuresCompact = planningDoc.coreFeatures
-    .map((f) => `${f.name}(${f.priority})`)
-    .join(', ');
+  return `You are a UI/UX Designer. Create a design specification based on the planning document.
 
-  const flowsCompact = planningDoc.userFlows
-    .map((f) => f.name)
-    .join(', ');
+## Task
+- ID: ${task.id}
+- Title: ${task.title}
+- Platform: ${config.platform}
 
-  return `[ORCHESTRATOR DESIGNER TASK]
+## Planning Input
+- Vision: ${planningDoc.productVision}
+- Features: ${planningDoc.coreFeatures.map((f) => f.name).join(', ')}
+- Requirements: ${planningDoc.requirements.join('; ')}
 
-Task: ${task.id} - ${task.title}
-Platform: ${config.platform}
-${config.figma?.enabled ? 'Figma: Enabled' : ''}
+## REQUIRED OUTPUT
 
-PLANNING INPUT:
-Vision: ${planningDoc.productVision}
-Features: ${featuresCompact}
-Flows: ${flowsCompact}
-Requirements: ${planningDoc.requirements.slice(0, 3).join('; ')}${planningDoc.requirements.length > 3 ? '...' : ''}
+You MUST write the following JSON to: ${messageFilePath}
 
-OUTPUT FILE: ${messageFilePath}
-TASK ID: ${task.id}
-TIMESTAMP: ${new Date().toISOString()}
+{
+  "messages": [{
+    "type": "design_specification",
+    "taskId": "${task.id}",
+    "platform": "${config.platform}",
+    "timestamp": "${new Date().toISOString()}",
+    "designTokens": {
+      "colors": {"primary": "#hex", "secondary": "#hex", "background": "#hex", "text-primary": "#hex"},
+      "fonts": {"heading": {"family": "Font", "size": "24px", "weight": "700"}, "body": {"family": "Font", "size": "16px", "weight": "400"}},
+      "spacing": {"xs": "4px", "sm": "8px", "md": "16px", "lg": "24px"},
+      "borderRadius": {"sm": "4px", "md": "8px", "lg": "16px"}
+    },
+    "componentSpecs": [{"name": "Component", "description": "Purpose", "usedTokens": ["primary", "md"]}]
+  }],
+  "lastRead": null
+}
 
-Create design specification with design tokens (colors, fonts, spacing, borderRadius) and component specs.`;
+Analyze the planning document and write the design specification JSON file now.`;
 }
 
 /**

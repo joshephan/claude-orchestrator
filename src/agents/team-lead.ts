@@ -346,7 +346,7 @@ export async function loadTechLeadTemplate(templatePath: string): Promise<string
 /**
  * Build prompt for tech lead with planning and design context
  *
- * Skills-optimized: Short context prompt that triggers orchestrator-tech-lead skill
+ * Skills-optimized: Compact prompt with essential context and output format
  *
  * @param task - Task to assign
  * @param planningDoc - Planning document from Planner
@@ -370,41 +370,45 @@ export function buildTechLeadPrompt(
     'to-developer.json'
   );
 
-  // Compact design tokens
   const colorsCompact = Object.entries(designSpec.designTokens.colors)
-    .slice(0, 4)
     .map(([k, v]) => `${k}:${v}`)
     .join(', ');
 
-  const spacingCompact = Object.entries(designSpec.designTokens.spacing)
-    .map(([k, v]) => `${k}:${v}`)
-    .join(', ');
+  return `You are a Tech Lead. Create implementation instructions based on the planning and design documents.
 
-  const componentsCompact = designSpec.componentSpecs
-    .map((c) => c.name)
-    .join(', ');
+## Task
+- ID: ${task.id}
+- Title: ${task.title}
+- Priority: ${task.priority}
+- Platform: ${config.platform}
+- Description: ${task.description}
 
-  return `[ORCHESTRATOR TECH LEAD TASK]
+## Planning Input
+- Vision: ${planningDoc.productVision}
+- Features: ${planningDoc.coreFeatures.map((f) => f.name).join(', ')}
+- Requirements: ${planningDoc.requirements.join('; ')}
 
-Task: ${task.id} - ${task.title}
-Type: ${task.type} | Priority: ${task.priority}
-Platform: ${config.platform}
+## Design Input
+- Colors: ${colorsCompact}
+- Components: ${designSpec.componentSpecs.map((c) => c.name).join(', ')}
 
-Description: ${task.description}
+## REQUIRED OUTPUT
 
-PLANNING INPUT:
-Vision: ${planningDoc.productVision}
-Features: ${planningDoc.coreFeatures.map((f) => f.name).join(', ')}
-Requirements: ${planningDoc.requirements.slice(0, 3).join('; ')}
+You MUST write the following JSON to: ${messageFilePath}
 
-DESIGN INPUT:
-Colors: ${colorsCompact}
-Spacing: ${spacingCompact}
-Components: ${componentsCompact}
+{
+  "messages": [{
+    "type": "task_assignment",
+    "taskId": "${task.id}",
+    "platform": "${config.platform}",
+    "title": "${task.title}",
+    "timestamp": "${new Date().toISOString()}",
+    "instructions": "Detailed step-by-step implementation instructions with design token references",
+    "filesToCreate": ["path/to/file1.tsx", "path/to/file2.ts"],
+    "architecture": "Architecture pattern (e.g., Component-based, MVVM)"
+  }],
+  "lastRead": null
+}
 
-OUTPUT FILE: ${messageFilePath}
-TASK ID: ${task.id}
-TIMESTAMP: ${new Date().toISOString()}
-
-Create implementation instructions with file list, architecture pattern, and design token references for the developer.`;
+Analyze the inputs and write the implementation instructions JSON file now.`;
 }

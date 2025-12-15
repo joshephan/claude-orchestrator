@@ -80,7 +80,7 @@ and ensuring smooth user experiences throughout the application.
 /**
  * Build prompt for planning a task
  *
- * Skills-optimized: Short context prompt that triggers orchestrator-planner skill
+ * Skills-optimized: Compact prompt with essential context and output format
  *
  * @param task - Task to plan
  * @param config - Project configuration
@@ -100,25 +100,43 @@ export function buildPlanningPrompt(
     'to-designer.json'
   );
 
-  return `[ORCHESTRATOR PLANNER TASK]
+  return `You are a Product Planner. Create a planning document for the following task.
 
-Task: ${task.id} - ${task.title}
-Type: ${task.type} | Priority: ${task.priority}
-Platform: ${config.platform}
+## Task
+- ID: ${task.id}
+- Title: ${task.title}
+- Priority: ${task.priority}
+- Description: ${task.description}
 
-Description: ${task.description}
+## Project Context
+- Project: ${config.project.name}
+- Platform: ${config.platform}
+- Scope: ${config.scope}
+- Goals: ${config.goals.join(', ')}
 
-Project: ${config.project.name}
-Scope: ${config.scope}
-Goals: ${config.goals.join(', ')}
-${task.webReference ? `References: ${task.webReference.files.join(', ')}` : ''}
-${task.acceptanceCriteria ? `Criteria: ${task.acceptanceCriteria.join('; ')}` : ''}
+## REQUIRED OUTPUT
 
-OUTPUT FILE: ${messageFilePath}
-TASK ID: ${task.id}
-TIMESTAMP: ${new Date().toISOString()}
+You MUST write the following JSON to: ${messageFilePath}
 
-Create a planning document with product vision, core features, user flows, and requirements.`;
+{
+  "messages": [{
+    "type": "planning_document",
+    "taskId": "${task.id}",
+    "platform": "${config.platform}",
+    "timestamp": "${new Date().toISOString()}",
+    "productVision": "1-2 sentence vision statement",
+    "coreFeatures": [
+      {"name": "Feature", "description": "What it does", "priority": "high|medium|low", "acceptanceCriteria": ["criterion"]}
+    ],
+    "userFlows": [
+      {"name": "Flow", "description": "Purpose", "steps": [{"step": 1, "action": "User action", "expectedResult": "Result"}]}
+    ],
+    "requirements": ["Technical requirement 1", "Technical requirement 2"]
+  }],
+  "lastRead": null
+}
+
+Analyze the task and write the planning document JSON file now.`;
 }
 
 // ============================================================================

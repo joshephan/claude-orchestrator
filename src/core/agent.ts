@@ -163,7 +163,7 @@ Begin your analysis now.`;
 /**
  * Build prompt for developer to implement a task
  *
- * Skills-optimized: Short context prompt that triggers orchestrator-developer skill
+ * Skills-optimized: Compact prompt with essential context and output format
  *
  * @param task - Task to implement
  * @param instructions - Instructions from team lead
@@ -178,25 +178,42 @@ function buildDeveloperPrompt(
   const projectPath = config.project.path;
   const messageFilePath = path.join(projectPath, '.claude-orchestrator', 'messages', 'to-team-lead.json');
 
-  const filesCompact = instructions.filesToCreate?.slice(0, 5).join(', ') || 'None';
+  return `You are a Developer. Implement the task according to the Tech Lead's instructions.
 
-  return `[ORCHESTRATOR DEVELOPER TASK]
+## Task
+- ID: ${task.id}
+- Title: ${task.title}
+- Platform: ${config.platform}
 
-Task: ${task.id} - ${task.title}
-Platform: ${config.platform}
-
-INSTRUCTIONS FROM TECH LEAD:
+## Tech Lead Instructions
 ${instructions.instructions}
 
-Files to create: ${filesCompact}${(instructions.filesToCreate?.length || 0) > 5 ? '...' : ''}
-Architecture: ${instructions.architecture || 'Not specified'}
-${instructions.apiEndpoints?.length ? `APIs: ${instructions.apiEndpoints.join(', ')}` : ''}
+## Files to Create
+${instructions.filesToCreate?.map((f) => `- ${f}`).join('\n') || 'As needed'}
 
-OUTPUT FILE: ${messageFilePath}
-TASK ID: ${task.id}
-TIMESTAMP: ${new Date().toISOString()}
+## Architecture
+${instructions.architecture || 'Follow existing patterns'}
 
-Implement the task, run build check, and write completion report.`;
+## REQUIRED OUTPUT
+
+After implementation, run build check and write this JSON to: ${messageFilePath}
+
+{
+  "messages": [{
+    "type": "completion_report",
+    "taskId": "${task.id}",
+    "platform": "${config.platform}",
+    "status": "awaiting_review",
+    "timestamp": "${new Date().toISOString()}",
+    "summary": "Brief summary of what was implemented",
+    "filesCreated": ["list", "of", "created", "files"],
+    "filesModified": ["list", "of", "modified", "files"],
+    "buildResult": {"status": "success", "command": "npm run build", "errors": 0}
+  }],
+  "lastRead": null
+}
+
+Implement the task, verify build, and write the completion report JSON file now.`;
 }
 
 /**
