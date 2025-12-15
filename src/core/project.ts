@@ -6,6 +6,8 @@
  */
 
 import fs from 'fs-extra';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import {
   getOrchestratorDir,
   getFilePath,
@@ -22,6 +24,10 @@ import type {
   StatusFile,
   MessageFile,
 } from '../types.js';
+
+// Get the directory of this module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ============================================================================
 // Default Values
@@ -114,6 +120,58 @@ function createDefaultMessageFile(): MessageFile {
 }
 
 // ============================================================================
+// Skills Management
+// ============================================================================
+
+/**
+ * Get the path to the package's skills directory
+ *
+ * @returns Path to skills directory
+ */
+function getPackageSkillsDir(): string {
+  // Navigate from dist/core/project.js to src/skills
+  // Structure: dist/core/project.js -> ../../src/skills
+  return path.resolve(__dirname, '..', '..', 'src', 'skills');
+}
+
+/**
+ * Copy orchestrator skills to the project's .claude/skills directory
+ *
+ * @param projectPath - Absolute path to the project
+ */
+async function deploySkillsToProject(projectPath: string): Promise<void> {
+  const sourceSkillsDir = getPackageSkillsDir();
+  const targetSkillsDir = path.join(projectPath, '.claude', 'skills');
+
+  // Check if source skills directory exists
+  if (!(await fs.pathExists(sourceSkillsDir))) {
+    console.warn(`Skills directory not found: ${sourceSkillsDir}`);
+    return;
+  }
+
+  // Create target skills directory if it doesn't exist
+  await fs.ensureDir(targetSkillsDir);
+
+  // List of skills to copy
+  const skills = [
+    'orchestrator-planner',
+    'orchestrator-designer',
+    'orchestrator-tech-lead',
+    'orchestrator-developer',
+  ];
+
+  for (const skill of skills) {
+    const sourceSkillPath = path.join(sourceSkillsDir, skill);
+    const targetSkillPath = path.join(targetSkillsDir, skill);
+
+    if (await fs.pathExists(sourceSkillPath)) {
+      // Copy skill directory (overwrite if exists)
+      await fs.copy(sourceSkillPath, targetSkillPath, { overwrite: true });
+    }
+  }
+}
+
+// ============================================================================
 // Project Initialization
 // ============================================================================
 
@@ -165,6 +223,9 @@ export async function initProject(projectPath: string): Promise<OrchestratorConf
   const logPath = getFilePath(absolutePath, 'log');
   const logHeader = `# Development Log\n\nProject: ${projectName}\nInitialized: ${config.initialized}\n\n---\n\n`;
   await fs.writeFile(logPath, logHeader, 'utf-8');
+
+  // Deploy orchestrator skills to project
+  await deploySkillsToProject(absolutePath);
 
   return config;
 }

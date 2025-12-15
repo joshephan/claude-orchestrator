@@ -79,19 +79,20 @@ and ensuring visual consistency between design and implementation.
 /**
  * Build prompt for creating design specification
  *
+ * Skills-optimized: Short context prompt that triggers orchestrator-designer skill
+ *
  * @param task - Task to design
  * @param planningDoc - Planning document from planner
  * @param config - Project configuration
- * @param template - Optional custom template
+ * @param template - Optional custom template (ignored when using skills)
  * @returns Complete prompt string
  */
 export function buildDesignPrompt(
   task: Task,
   planningDoc: PlanningDocumentMessage,
   config: OrchestratorConfig,
-  template?: string
+  _template?: string
 ): string {
-  const roleTemplate = template || getDefaultDesignerTemplate();
   const projectPath = config.project.path;
   const messageFilePath = path.join(
     projectPath,
@@ -100,121 +101,31 @@ export function buildDesignPrompt(
     'to-tech-lead.json'
   );
 
-  const figmaContext = config.figma?.enabled
-    ? `\n### Figma Integration\nFigma integration is enabled. If available, reference the Figma file for design tokens.`
-    : '';
+  const featuresCompact = planningDoc.coreFeatures
+    .map((f) => `${f.name}(${f.priority})`)
+    .join(', ');
 
-  return `${roleTemplate}
+  const flowsCompact = planningDoc.userFlows
+    .map((f) => f.name)
+    .join(', ');
 
----
+  return `[ORCHESTRATOR DESIGNER TASK]
 
-## Current Design Task
+Task: ${task.id} - ${task.title}
+Platform: ${config.platform}
+${config.figma?.enabled ? 'Figma: Enabled' : ''}
 
-### Task Details
-- **ID**: ${task.id}
-- **Title**: ${task.title}
-- **Platform**: ${config.platform}
-${figmaContext}
+PLANNING INPUT:
+Vision: ${planningDoc.productVision}
+Features: ${featuresCompact}
+Flows: ${flowsCompact}
+Requirements: ${planningDoc.requirements.slice(0, 3).join('; ')}${planningDoc.requirements.length > 3 ? '...' : ''}
 
-### Planning Document Input
+OUTPUT FILE: ${messageFilePath}
+TASK ID: ${task.id}
+TIMESTAMP: ${new Date().toISOString()}
 
-**Product Vision**: ${planningDoc.productVision}
-
-**Core Features**:
-${planningDoc.coreFeatures.map((f) => `- **${f.name}** (${f.priority}): ${f.description}`).join('\n')}
-
-**User Flows**:
-${planningDoc.userFlows.map((flow) => `
-#### ${flow.name}
-${flow.description}
-${flow.steps.map((s) => `${s.step}. ${s.action} → ${s.expectedResult}`).join('\n')}`).join('\n')}
-
-**Technical Requirements**:
-${planningDoc.requirements.map((r) => `- ${r}`).join('\n')}
-
----
-
-## Your Task
-
-1. Define design tokens based on the planning document
-2. Create component specifications
-3. Ensure platform-appropriate design patterns
-4. Document the design system
-
-## Required Output
-
-You MUST write your design specification to the following file:
-\`${messageFilePath}\`
-
-The JSON format should be:
-\`\`\`json
-{
-  "messages": [{
-    "type": "design_specification",
-    "taskId": "${task.id}",
-    "platform": "${config.platform}",
-    "timestamp": "${new Date().toISOString()}",
-    "designTokens": {
-      "colors": {
-        "primary": "#1E88E5",
-        "secondary": "#FF5722",
-        "background": "#FFFFFF",
-        "surface": "#F5F5F5",
-        "text-primary": "#212121",
-        "text-secondary": "#757575",
-        "error": "#D32F2F",
-        "success": "#388E3C"
-      },
-      "fonts": {
-        "heading": {
-          "family": "Inter",
-          "size": "24px",
-          "weight": "700",
-          "lineHeight": "1.3"
-        },
-        "body": {
-          "family": "Inter",
-          "size": "16px",
-          "weight": "400",
-          "lineHeight": "1.5"
-        },
-        "caption": {
-          "family": "Inter",
-          "size": "12px",
-          "weight": "400",
-          "lineHeight": "1.4"
-        }
-      },
-      "spacing": {
-        "xs": "4px",
-        "sm": "8px",
-        "md": "16px",
-        "lg": "24px",
-        "xl": "32px"
-      },
-      "borderRadius": {
-        "sm": "4px",
-        "md": "8px",
-        "lg": "16px",
-        "full": "9999px"
-      }
-    },
-    "componentSpecs": [
-      {
-        "name": "ComponentName",
-        "description": "What this component does",
-        "usedTokens": ["primary", "md", "body"]
-      }
-    ],
-    "figmaReference": "https://figma.com/file/... (optional)"
-  }],
-  "lastRead": null
-}
-\`\`\`
-
-${getPlatformDesignGuidelines(config.platform)}
-
-Begin creating the design specification now.`;
+Create design specification with design tokens (colors, fonts, spacing, borderRadius) and component specs.`;
 }
 
 /**

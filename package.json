@@ -8,6 +8,13 @@
   "bin": {
     "claude-orchestrator": "bin/cli.js"
   },
+  "files": [
+    "dist",
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",

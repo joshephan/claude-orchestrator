@@ -346,14 +346,13 @@ export async function loadTechLeadTemplate(templatePath: string): Promise<string
 /**
  * Build prompt for tech lead with planning and design context
  *
- * This is the primary function for the 4-agent pipeline, which receives
- * input from both the Planner and Designer agents.
+ * Skills-optimized: Short context prompt that triggers orchestrator-tech-lead skill
  *
  * @param task - Task to assign
  * @param planningDoc - Planning document from Planner
  * @param designSpec - Design specification from Designer
  * @param config - Project configuration
- * @param template - Optional custom template
+ * @param template - Optional custom template (ignored when using skills)
  * @returns Complete prompt string
  */
 export function buildTechLeadPrompt(
@@ -361,9 +360,8 @@ export function buildTechLeadPrompt(
   planningDoc: PlanningDocumentMessage,
   designSpec: DesignSpecificationMessage,
   config: OrchestratorConfig,
-  template?: string
+  _template?: string
 ): string {
-  const roleTemplate = template || getDefaultTechLeadTemplate();
   const projectPath = config.project.path;
   const messageFilePath = path.join(
     projectPath,
@@ -372,114 +370,41 @@ export function buildTechLeadPrompt(
     'to-developer.json'
   );
 
-  return `${roleTemplate}
+  // Compact design tokens
+  const colorsCompact = Object.entries(designSpec.designTokens.colors)
+    .slice(0, 4)
+    .map(([k, v]) => `${k}:${v}`)
+    .join(', ');
 
----
+  const spacingCompact = Object.entries(designSpec.designTokens.spacing)
+    .map(([k, v]) => `${k}:${v}`)
+    .join(', ');
 
-## Current Assignment
+  const componentsCompact = designSpec.componentSpecs
+    .map((c) => c.name)
+    .join(', ');
 
-### Task Details
-- **ID**: ${task.id}
-- **Title**: ${task.title}
-- **Type**: ${task.type}
-- **Priority**: ${task.priority}
-- **Description**: ${task.description}
+  return `[ORCHESTRATOR TECH LEAD TASK]
 
-### Project Context
-- **Project Name**: ${config.project.name}
-- **Platform**: ${config.platform}
-- **Development Scope**: ${config.scope}
-- **Goals**: ${config.goals.join(', ')}
+Task: ${task.id} - ${task.title}
+Type: ${task.type} | Priority: ${task.priority}
+Platform: ${config.platform}
 
----
+Description: ${task.description}
 
-## Input from Planner
+PLANNING INPUT:
+Vision: ${planningDoc.productVision}
+Features: ${planningDoc.coreFeatures.map((f) => f.name).join(', ')}
+Requirements: ${planningDoc.requirements.slice(0, 3).join('; ')}
 
-**Product Vision**: ${planningDoc.productVision}
+DESIGN INPUT:
+Colors: ${colorsCompact}
+Spacing: ${spacingCompact}
+Components: ${componentsCompact}
 
-**Core Features**:
-${planningDoc.coreFeatures.map((f) => `- **${f.name}** (${f.priority}): ${f.description}
-  ${f.acceptanceCriteria ? `  - Criteria: ${f.acceptanceCriteria.join(', ')}` : ''}`).join('\n')}
+OUTPUT FILE: ${messageFilePath}
+TASK ID: ${task.id}
+TIMESTAMP: ${new Date().toISOString()}
 
-**User Flows**:
-${planningDoc.userFlows.map((flow) => `- **${flow.name}**: ${flow.description}`).join('\n')}
-
-**Technical Requirements**:
-${planningDoc.requirements.map((r) => `- ${r}`).join('\n')}
-
----
-
-## Input from Designer
-
-### Design Tokens
-
-**Colors**:
-${Object.entries(designSpec.designTokens.colors)
-  .map(([name, value]) => `- ${name}: ${value}`)
-  .join('\n')}
-
-**Fonts**:
-${Object.entries(designSpec.designTokens.fonts)
-  .map(([name, token]) => `- ${name}: ${token.family} ${token.size} ${token.weight}`)
-  .join('\n')}
-
-**Spacing**:
-${Object.entries(designSpec.designTokens.spacing)
-  .map(([name, value]) => `- ${name}: ${value}`)
-  .join('\n')}
-
-${designSpec.designTokens.borderRadius ? `**Border Radius**:
-${Object.entries(designSpec.designTokens.borderRadius)
-  .map(([name, value]) => `- ${name}: ${value}`)
-  .join('\n')}` : ''}
-
-**Component Specs**:
-${designSpec.componentSpecs.map((c) => `- **${c.name}**: ${c.description} (uses: ${c.usedTokens.join(', ')})`).join('\n')}
-
-${designSpec.figmaReference ? `**Figma Reference**: ${designSpec.figmaReference}` : ''}
-
----
-
-## Your Task
-
-1. Analyze all inputs from Planner and Designer
-2. Design the technical implementation approach
-3. Break down into concrete development tasks
-4. Write detailed instructions that include design token references
-
-## Required Output
-
-You MUST write your instructions to the following file:
-\`${messageFilePath}\`
-
-The JSON format should be:
-\`\`\`json
-{
-  "messages": [{
-    "type": "task_assignment",
-    "taskId": "${task.id}",
-    "platform": "${config.platform}",
-    "title": "${task.title}",
-    "instructions": "Your detailed implementation instructions here...",
-    "filesToCreate": ["list", "of", "files", "to", "create"],
-    "architecture": "Architecture pattern to follow",
-    "apiEndpoints": ["API endpoints if applicable"],
-    "timestamp": "${new Date().toISOString()}"
-  }],
-  "lastRead": null
-}
-\`\`\`
-
-## Instructions Should Include
-
-1. Overview of the implementation
-2. File structure and component hierarchy
-3. **Design token usage** - Reference the exact tokens from the design spec
-4. Step-by-step implementation guide
-5. Integration with existing code
-6. Testing requirements
-
-${getPlatformGuidelines(config.platform)}
-
-Begin your analysis and write the instructions now.`;
+Create implementation instructions with file list, architecture pattern, and design token references for the developer.`;
 }

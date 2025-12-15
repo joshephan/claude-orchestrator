@@ -163,6 +163,8 @@ Begin your analysis now.`;
 /**
  * Build prompt for developer to implement a task
  *
+ * Skills-optimized: Short context prompt that triggers orchestrator-developer skill
+ *
  * @param task - Task to implement
  * @param instructions - Instructions from team lead
  * @param config - Project configuration
@@ -174,57 +176,27 @@ function buildDeveloperPrompt(
   config: OrchestratorConfig
 ): string {
   const projectPath = config.project.path;
+  const messageFilePath = path.join(projectPath, '.claude-orchestrator', 'messages', 'to-team-lead.json');
 
-  return `You are a Developer responsible for implementing tasks according to the Team Lead's instructions.
+  const filesCompact = instructions.filesToCreate?.slice(0, 5).join(', ') || 'None';
 
-## Current Task
-- **ID**: ${task.id}
-- **Title**: ${task.title}
-- **Platform**: ${config.platform}
+  return `[ORCHESTRATOR DEVELOPER TASK]
 
-## Team Lead's Instructions
+Task: ${task.id} - ${task.title}
+Platform: ${config.platform}
+
+INSTRUCTIONS FROM TECH LEAD:
 ${instructions.instructions}
 
-## Files to Create
-${instructions.filesToCreate?.map((f) => `- ${f}`).join('\n') || 'No files specified'}
+Files to create: ${filesCompact}${(instructions.filesToCreate?.length || 0) > 5 ? '...' : ''}
+Architecture: ${instructions.architecture || 'Not specified'}
+${instructions.apiEndpoints?.length ? `APIs: ${instructions.apiEndpoints.join(', ')}` : ''}
 
-## Architecture Pattern
-${instructions.architecture || 'Not specified'}
+OUTPUT FILE: ${messageFilePath}
+TASK ID: ${task.id}
+TIMESTAMP: ${new Date().toISOString()}
 
-${instructions.apiEndpoints?.length ? `## API Endpoints\n${instructions.apiEndpoints.map((e) => `- ${e}`).join('\n')}` : ''}
-
-## Your Responsibilities
-1. Implement the task following the instructions exactly
-2. Create all specified files
-3. Follow the architecture pattern
-4. Test your implementation by running a build check
-5. Report completion with details
-
-## Output
-After implementation, you MUST write your completion report to:
-${path.join(projectPath, '.claude-orchestrator', 'messages', 'to-team-lead.json')}
-
-The file format should be:
-{
-  "messages": [{
-    "type": "completion_report",
-    "taskId": "${task.id}",
-    "platform": "${config.platform}",
-    "status": "awaiting_review",
-    "summary": "Brief summary of what was implemented",
-    "filesCreated": ["list of files created"],
-    "filesModified": ["list of files modified"],
-    "buildResult": {
-      "status": "success" or "failed",
-      "command": "build command used",
-      "errors": 0
-    },
-    "timestamp": "ISO timestamp"
-  }],
-  "lastRead": null
-}
-
-Begin implementation now.`;
+Implement the task, run build check, and write completion report.`;
 }
 
 /**
